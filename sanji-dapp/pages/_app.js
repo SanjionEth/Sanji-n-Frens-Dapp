@@ -1,32 +1,25 @@
 import "../styles/globals.css";
-
-import { WagmiConfig, configureChains, createConfig } from "wagmi";
-import { mainnet, sepolia } from "wagmi/chains";
-import { publicProvider } from "wagmi/providers/public";
+import { WagmiConfig, createConfig, http } from "wagmi";
+import { mainnet } from "wagmi/chains";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-const queryClient = new QueryClient();
-
-const chains = [mainnet, sepolia];
 
 const config = createConfig(
   getDefaultConfig({
-    appName: "Sanji n Frens",
-    chains,
-    publicClient: publicProvider(),
-    walletConnectProjectId: "demo", // Replace with your real WalletConnect ID if needed
+    appName: "Sanji 'n Frens",
+    chains: [mainnet],
+    transports: {
+      [mainnet.id]: http(),
+    },
+    walletConnectProjectId: "YOUR_PROJECT_ID" // Optional: Replace or remove if not using WalletConnect
   })
 );
 
 export default function App({ Component, pageProps }) {
   return (
     <WagmiConfig config={config}>
-      <QueryClientProvider client={queryClient}>
-        <ConnectKitProvider theme="auto" options={{ enforceSupportedChains: true }}>
-          <Component {...pageProps} />
-        </ConnectKitProvider>
-      </QueryClientProvider>
+      <ConnectKitProvider theme="auto" options={{ enforceSupportedChains: true }}>
+        <Component {...pageProps} />
+      </ConnectKitProvider>
     </WagmiConfig>
   );
 }
