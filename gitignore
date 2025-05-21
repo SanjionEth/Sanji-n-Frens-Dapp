@@ -1,0 +1,38 @@
+
+# Dependencies
+node_modules/
+.env
+.env.local
+.env.production
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+.cache/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Hardhat artifacts
+artifacts/
+cache/
+typechain/
+
+# IDEs and editors
+.vscode/
+.idea/
+
+# Custom folders to ignore
+sanji-dapp-interactive/
+sanji-dapp-debug-full/
+sanji-dapp-final/
+sanji-dapp-full/
+*.zip
