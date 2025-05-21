@@ -5,6 +5,7 @@ import { mainnet } from "wagmi/chains";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+// 1. Create wagmi config
 const config = createConfig(
   getDefaultConfig({
     appName: "Sanji 'n Frens",
@@ -12,11 +13,12 @@ const config = createConfig(
     transports: {
       [mainnet.id]: http(),
     },
-    walletConnectProjectId: "YOUR_PROJECT_ID" // replace or remove if unused
+    // Optional: include WalletConnect project ID if needed
+    // walletConnectProjectId: "cbf4d086650149bbedc3ebf58ff8855e"
   })
 );
 
-// Create a query client instance
+// 2. Create query client
 const queryClient = new QueryClient();
 
 export default function App({ Component, pageProps }) {
