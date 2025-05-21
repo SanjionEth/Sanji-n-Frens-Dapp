@@ -1,10 +1,15 @@
-
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "connectkit";
 
 export default function Home() {
+  const [isClient, setIsClient] = useState(false);
   const { isConnected } = useAccount();
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleMint = (type) => {
     alert(`Minting: ${type}`);
@@ -42,16 +47,19 @@ export default function Home() {
 
       {/* Wallet Connect Button (on Sanji medallion) */}
       <div className="absolute left-[165px] top-[380px] w-[60px] h-[60px] z-30">
-        <ConnectButton.Custom>
-          {({ show }) => (
-            <button
-              className="w-full h-full bg-transparent pointer-events-auto"
-              title="Connect Wallet"
-              onClick={show}
-            />
-          )}
-        </ConnectButton.Custom>
+        {isClient && (
+          <ConnectButton.Custom>
+            {({ show }) => (
+              <button
+                className="w-full h-full bg-transparent pointer-events-auto"
+                title="Connect Wallet"
+                onClick={show}
+              />
+            )}
+          </ConnectButton.Custom>
+        )}
       </div>
     </main>
   );
 }
+
