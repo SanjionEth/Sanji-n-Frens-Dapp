@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAccount } from "wagmi";
 import { ethers } from "ethers";
@@ -12,15 +11,12 @@ function formatSeconds(seconds) {
   const days = Math.floor(seconds / (60 * 60 * 24));
   const hours = Math.floor((seconds % (60 * 60 * 24)) / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
-  return \`\${days}d \${hours}h \${minutes}m\`;
+  return `${days}d ${hours}h ${minutes}m`;
 }
 
 export default function MintButtons({ provider }) {
   const { isConnected } = useAccount();
   const [selectedToken, setSelectedToken] = useState("USDT");
-
-  const MINT_PRICE = "$25";
-  const FREE_SANJI_REQUIREMENT = "1M+";
 
   // 🃏 Base Deck
   const { mintWithSanji, minting: sanjiMinting, status: sanjiStatus } = useSanjiMint(provider);
@@ -33,14 +29,14 @@ export default function MintButtons({ provider }) {
   const handleStablecoinMint = () => {
     if (!cooldownActive) mintWithToken(selectedToken);
   };
-  const remaining = supply !== null ? \`Remaining Supply: \${10_000 - supply} / 10,000\` : "Loading supply...";
+  const remaining = supply !== null ? `Remaining Supply: ${10_000 - supply} / 10,000` : "Loading supply...";
   const cooldownMessage = cooldownActive
-    ? \`⏳ Cooldown active. Try again in \${formatSeconds(timeLeft)}.\`
+    ? `⏳ Cooldown active. Try again in ${formatSeconds(timeLeft)}.`
     : hasMinted
     ? "✅ Already minted. Cooldown passed — you may mint again."
     : "🎉 You are eligible to mint.";
 
-  // 🌟 Special Cards
+  // 🌟 Special Card A – Tactical Whistle
   const whistle = useSpecialCardMint({
     provider,
     contractAddress: "0x0D23e63Db1D2e7346d0c09122c59b393557b98A2",
@@ -49,6 +45,7 @@ export default function MintButtons({ provider }) {
     maxSupply: 200,
   });
 
+  // 🌟 Special Card B – Altman's First Code
   const code = useSpecialCardMint({
     provider,
     contractAddress: "0x48E15976C004FD90fD34dab36F1C06A543579D94",
@@ -57,7 +54,7 @@ export default function MintButtons({ provider }) {
     maxSupply: 100,
   });
 
-  const renderSpecialCard = (card, label, address) => (
+  const renderSpecialCard = (card, label) => (
     <div className="space-y-2">
       <h3 className="text-md font-semibold">{label}</h3>
       <p className="text-sm text-gray-600">Remaining: {card.remaining}</p>
@@ -72,13 +69,12 @@ export default function MintButtons({ provider }) {
         onClick={card.mint}
         disabled={card.minting || card.cooldownActive || card.hasMinted}
         className="bg-purple-600 text-white py-2 px-4 rounded disabled:opacity-50"
-        aria-label={\`Mint \${label}\`}
       >
-        {card.minting ? "Minting..." : \`Mint \${label}\`}
+        {card.minting ? "Minting..." : `Mint ${label}`}
       </button>
       {card.status && <p>{card.status}</p>}
       <a
-        href={\`https://etherscan.io/address/\${address}\`}
+        href={`https://etherscan.io/address/${card.contractAddress}`}
         target="_blank"
         rel="noopener noreferrer"
         className="text-blue-600 underline text-sm"
@@ -99,34 +95,34 @@ export default function MintButtons({ provider }) {
         <>
           <p className="text-yellow-600">{cooldownMessage}</p>
 
-          <div className="flex flex-col md:flex-row gap-4">
-            <button
-              onClick={handleSanjiMint}
-              disabled={sanjiMinting || cooldownActive}
-              className="bg-green-600 text-white py-2 px-4 rounded disabled:opacity-50"
-              aria-label="Mint Base Deck with SANJI"
-            >
-              {sanjiMinting ? "Minting..." : \`Free Mint with SANJI (\${FREE_SANJI_REQUIREMENT})\`}
-            </button>
+          {/* Free SANJI Mint */}
+          <button
+            onClick={handleSanjiMint}
+            disabled={sanjiMinting || cooldownActive}
+            className="bg-green-600 text-white py-2 px-4 rounded disabled:opacity-50"
+          >
+            {sanjiMinting ? "Minting..." : "Free Mint with SANJI (1M+)"}
+          </button>
+          {sanjiStatus && <p>{sanjiStatus}</p>}
 
-            <div className="space-y-2">
-              <select
-                value={selectedToken}
-                onChange={(e) => setSelectedToken(e.target.value)}
-                className="border rounded px-2 py-1"
-              >
-                <option value="USDT">Pay with USDT ({MINT_PRICE})</option>
-                <option value="USDC">Pay with USDC ({MINT_PRICE})</option>
-              </select>
-              <button
-                onClick={handleStablecoinMint}
-                disabled={tokenMinting || cooldownActive}
-                className="bg-blue-600 text-white py-2 px-4 rounded disabled:opacity-50"
-                aria-label="Mint Base Deck with Stablecoin"
-              >
-                {tokenMinting ? \`Minting with \${selectedToken}...\` : \`Mint with \${selectedToken}\`}
-              </button>
-            </div>
+          {/* Paid Stablecoin Mint */}
+          <div className="space-y-2">
+            <select
+              value={selectedToken}
+              onChange={(e) => setSelectedToken(e.target.value)}
+              className="border rounded px-2 py-1"
+            >
+              <option value="USDT">Pay with USDT ($25)</option>
+              <option value="USDC">Pay with USDC ($25)</option>
+            </select>
+            <button
+              onClick={handleStablecoinMint}
+              disabled={tokenMinting || cooldownActive}
+              className="bg-blue-600 text-white py-2 px-4 rounded disabled:opacity-50"
+            >
+              {tokenMinting ? `Minting with ${selectedToken}...` : `Mint with ${selectedToken}`}
+            </button>
+            {tokenStatus && <p>{tokenStatus}</p>}
           </div>
 
           <a
@@ -138,10 +134,11 @@ export default function MintButtons({ provider }) {
             View BaseDeckNFT on Etherscan
           </a>
 
+          {/* Special Cards Section */}
           <div className="space-y-6 pt-6">
             <h2 className="text-xl font-bold">Special Card Mints</h2>
-            {renderSpecialCard(whistle, "Sanji's Tactical Whistle", "0x0D23e63Db1D2e7346d0c09122c59b393557b98A2")}
-            {renderSpecialCard(code, "Sam Altman's First Code", "0x48E15976C004FD90fD34dab36F1C06A543579D94")}
+            {renderSpecialCard(whistle, "Sanji's Tactical Whistle")}
+            {renderSpecialCard(code, "Sam Altman's First Code")}
           </div>
         </>
       )}
