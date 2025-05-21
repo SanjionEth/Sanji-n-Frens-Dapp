@@ -1,31 +1,42 @@
-import "@/styles/globals.css";
 import Head from "next/head";
-import { WagmiConfig, createConfig, configureChains, mainnet } from "wagmi";
-import { publicProvider } from "wagmi/providers/public";
-import { InjectedConnector } from "wagmi/connectors/injected";
-import dynamic from "next/dynamic";
+import { WagmiConfig, createConfig, http } from "wagmi";
+import { sepolia } from "wagmi/chains";
+import { ConnectKitProvider, getDefaultConfig } from "connectkit";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import MintButtons from "../components/MintButtons";
+import { ConnectButton } from "connectkit";
 
-const HomeComponent = dynamic(() => import("@/components/Home"), { ssr: false });
+// 1. Create QueryClient
+const queryClient = new QueryClient();
 
-const { chains, publicClient } = configureChains([mainnet], [publicProvider()]);
-const wagmiConfig = createConfig({
-  autoConnect: true,
-  connectors: [new InjectedConnector({ chains })],
-  publicClient,
-});
+// 2. Create wagmi config
+const config = createConfig(
+  getDefaultConfig({
+    appName: "Sanji 'n Frens DApp",
+    chains: [sepolia],
+    transports: {
+      [sepolia.id]: http(),
+    },
+  })
+);
 
-export default function App() {
+export default function Home() {
   return (
     <>
       <Head>
-        <title>Sanji 'n Frens</title>
-        <meta name="description" content="Mint Sanji NFTs" />
+        <title>Sanji 'n Frens NFT DApp</title>
       </Head>
-      <WagmiConfig config={wagmiConfig}>
-        <main className="min-h-screen bg-black text-white flex items-center justify-center">
-          <HomeComponent />
-        </main>
-      </WagmiConfig>
+      {/* 3. Provide QueryClient context */}
+      <QueryClientProvider client={queryClient}>
+        <WagmiConfig config={config}>
+          <ConnectKitProvider>
+            <main className="p-4">
+              <ConnectButton />
+              <MintButtons />
+            </main>
+          </ConnectKitProvider>
+        </WagmiConfig>
+      </QueryClientProvider>
     </>
   );
 }
