@@ -1,5 +1,6 @@
+
 import Image from "next/image";
-import { useAccount, useSigner } from "wagmi";
+import { useAccount, useWalletClient } from "wagmi";
 import { ethers } from "ethers";
 import useSanjiMint from "../hooks/useSanjiMint";
 import useStablecoinMint from "../hooks/useStablecoinMint";
@@ -15,7 +16,8 @@ function formatSeconds(seconds) {
 
 export default function MainPage() {
   const { isConnected } = useAccount();
-  const { data: signer } = useSigner();
+  const { data: walletClient } = useWalletClient();
+  const signer = walletClient?.transport?.getSigner?.();
 
   const {
     mintWithSanji,
