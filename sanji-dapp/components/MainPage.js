@@ -1,6 +1,6 @@
-
 import Image from "next/image";
-import { useAccount, useWalletClient } from "wagmi";
+import { useAccount } from "wagmi";
+import { ConnectButton } from "connectkit";
 import { ethers } from "ethers";
 import useSanjiMint from "../hooks/useSanjiMint";
 import useStablecoinMint from "../hooks/useStablecoinMint";
@@ -16,42 +16,22 @@ function formatSeconds(seconds) {
 
 export default function MainPage() {
   const { isConnected } = useAccount();
-  const { data: walletClient } = useWalletClient();
-  const signer = walletClient?.transport?.getSigner?.();
-
-  const {
-    mintWithSanji,
-    minting: sanjiMinting,
-    status: sanjiStatus
-  } = useSanjiMint(signer);
-
-  const {
-    mintWithToken,
-    minting: tokenMinting,
-    status: tokenStatus
-  } = useStablecoinMint(signer);
-
-  const {
-    cooldownActive,
-    timeLeft,
-    hasMinted,
-    supply
-  } = useMintStatus(signer);
+  const { mintWithSanji } = useSanjiMint();
+  const { mintWithToken } = useStablecoinMint();
+  const { cooldownActive, timeLeft, hasMinted, supply } = useMintStatus();
 
   const whistle = useSpecialCardMint({
-    provider: signer,
     contractAddress: "0x0D23e63Db1D2e7346d0c09122c59b393557b98A2",
     cardType: "Sanji's Tactical Whistle",
     requiredSanji: ethers.parseUnits("5000000", 18),
-    maxSupply: 200
+    maxSupply: 200,
   });
 
   const altman = useSpecialCardMint({
-    provider: signer,
     contractAddress: "0x48E15976C004FD90fD34dab36F1C06A543579D94",
     cardType: "Sam Altman's First Code",
     requiredSanji: ethers.parseUnits("10000000", 18),
-    maxSupply: 100
+    maxSupply: 100,
   });
 
   const mintWithSanjiOrToken = async () => {
@@ -71,7 +51,6 @@ export default function MainPage() {
   };
 
   const handleMint = async (type) => {
-    if (!signer) return;
     if (type === "base") {
       await mintWithSanjiOrToken();
     } else if (type === "whistle") {
@@ -92,39 +71,14 @@ export default function MainPage() {
         className="pointer-events-none z-0"
       />
 
-      {/* Top nav buttons */}
-      <div className="absolute top-4 left-4 z-20 flex gap-3">
-        <a href="https://sanjioneth.fun/" target="_blank" rel="noopener noreferrer">
-          <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Sanji Website"> </button>
-        </a>
-        <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
-        <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
-        <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
-        <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
-        <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
+      <div className="absolute left-[165px] top-[380px] w-[60px] h-[60px] z-30">
+        <ConnectButton />
       </div>
 
-      {/* Mint Buttons */}
-      <div className="absolute z-10 text-white text-sm">
+      <div className="absolute z-10">
         <button onClick={() => handleMint("altman")} className="absolute left-[438px] top-[540px] w-[120px] h-[100px] bg-transparent pointer-events-auto" title="Mint Altman's First Code"> </button>
         <button onClick={() => handleMint("whistle")} className="absolute left-[630px] top-[540px] w-[120px] h-[100px] bg-transparent pointer-events-auto" title="Mint Sanji's Tactical Whistle"> </button>
         <button onClick={() => handleMint("base")} className="absolute left-[825px] top-[530px] w-[130px] h-[115px] bg-transparent pointer-events-auto" title="Mint Base Deck"> </button>
-
-        {cooldownActive && (
-          <p className="absolute top-[660px] left-[820px] bg-black bg-opacity-70 px-2 py-1 rounded">
-            ⏳ Base deck cooldown: {formatSeconds(timeLeft)}
-          </p>
-        )}
-        {sanjiStatus && (
-          <p className="absolute top-[680px] left-[820px] bg-black bg-opacity-70 px-2 py-1 rounded">
-            {sanjiStatus}
-          </p>
-        )}
-        {tokenStatus && (
-          <p className="absolute top-[700px] left-[820px] bg-black bg-opacity-70 px-2 py-1 rounded">
-            {tokenStatus}
-          </p>
-        )}
       </div>
     </main>
   );
