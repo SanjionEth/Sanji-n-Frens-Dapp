@@ -1,4 +1,3 @@
-
 import Image from "next/image";
 import { useAccount, useSigner } from "wagmi";
 import { ethers } from "ethers";
@@ -6,6 +5,7 @@ import useSanjiMint from "../hooks/useSanjiMint";
 import useStablecoinMint from "../hooks/useStablecoinMint";
 import useSpecialCardMint from "../hooks/useSpecialCardMint";
 import useMintStatus from "../hooks/useMintStatus";
+import { ConnectButton } from "connectkit";
 
 function formatSeconds(seconds) {
   const days = Math.floor(seconds / (60 * 60 * 24));
@@ -124,6 +124,11 @@ export default function MainPage() {
             {tokenStatus}
           </p>
         )}
+      </div>
+
+      {/* Wallet Connect Button (Sanji's medallion) */}
+      <div className="absolute left-[165px] top-[380px] w-[60px] h-[60px] z-30">
+        <ConnectButton />
       </div>
     </main>
   );
