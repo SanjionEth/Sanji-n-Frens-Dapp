@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAccount } from "wagmi";
 import { ethers } from "ethers";
@@ -7,16 +8,24 @@ import useStablecoinMint from "../hooks/useStablecoinMint";
 import useMintStatus from "../hooks/useMintStatus";
 import useSpecialCardMint from "../hooks/useSpecialCardMint";
 
+const MAX_BASE_SUPPLY = 10_000;
+const MAX_TACTICAL_WHISTLE = 200;
+const MAX_FIRST_CODE = 100;
+
 function formatSeconds(seconds) {
   const days = Math.floor(seconds / (60 * 60 * 24));
   const hours = Math.floor((seconds % (60 * 60 * 24)) / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
-  return `${days}d ${hours}h ${minutes}m`;
+  return \`\${days}d \${hours}h \${minutes}m\`;
 }
 
 export default function MintButtons({ provider }) {
   const { isConnected } = useAccount();
   const [selectedToken, setSelectedToken] = useState("USDT");
+
+  if (!provider) {
+    return <p className="text-red-500">Ethereum provider not detected.</p>;
+  }
 
   // 🃏 Base Deck
   const { mintWithSanji, minting: sanjiMinting, status: sanjiStatus } = useSanjiMint(provider);
@@ -29,9 +38,9 @@ export default function MintButtons({ provider }) {
   const handleStablecoinMint = () => {
     if (!cooldownActive) mintWithToken(selectedToken);
   };
-  const remaining = supply !== null ? `Remaining Supply: ${10_000 - supply} / 10,000` : "Loading supply...";
+  const remaining = supply !== null ? \`Remaining Supply: \${MAX_BASE_SUPPLY - supply} / \${MAX_BASE_SUPPLY}\` : "Loading supply...";
   const cooldownMessage = cooldownActive
-    ? `⏳ Cooldown active. Try again in ${formatSeconds(timeLeft)}.`
+    ? \`⏳ Cooldown active. Try again in \${formatSeconds(timeLeft)}.\`
     : hasMinted
     ? "✅ Already minted. Cooldown passed — you may mint again."
     : "🎉 You are eligible to mint.";
@@ -42,7 +51,7 @@ export default function MintButtons({ provider }) {
     contractAddress: "0x0D23e63Db1D2e7346d0c09122c59b393557b98A2",
     cardType: "Sanji's Tactical Whistle",
     requiredSanji: ethers.parseUnits("5000000", 18),
-    maxSupply: 200,
+    maxSupply: MAX_TACTICAL_WHISTLE,
   });
 
   // 🌟 Special Card B – Altman's First Code
@@ -51,7 +60,7 @@ export default function MintButtons({ provider }) {
     contractAddress: "0x48E15976C004FD90fD34dab36F1C06A543579D94",
     cardType: "Sam Altman's First Code",
     requiredSanji: ethers.parseUnits("10000000", 18),
-    maxSupply: 100,
+    maxSupply: MAX_FIRST_CODE,
   });
 
   const renderSpecialCard = (card, label) => (
@@ -68,13 +77,23 @@ export default function MintButtons({ provider }) {
       <button
         onClick={card.mint}
         disabled={card.minting || card.cooldownActive || card.hasMinted}
-        className="bg-purple-600 text-white py-2 px-4 rounded disabled:opacity-50"
+        className="bg-purple-600 text-white py-2 px-4 rounded disabled:opacity-50 flex items-center"
       >
-        {card.minting ? "Minting..." : `Mint ${label}`}
+        {card.minting ? (
+          <span className="flex items-center">
+            <svg className="animate-spin h-4 w-4 mr-2 text-white" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            Minting...
+          </span>
+        ) : (
+          \`Mint \${label}\`
+        )}
       </button>
       {card.status && <p>{card.status}</p>}
       <a
-        href={`https://etherscan.io/address/${card.contractAddress}`}
+        href={\`https://etherscan.io/address/\${card.contractAddress}\`}
         target="_blank"
         rel="noopener noreferrer"
         className="text-blue-600 underline text-sm"
@@ -120,7 +139,7 @@ export default function MintButtons({ provider }) {
               disabled={tokenMinting || cooldownActive}
               className="bg-blue-600 text-white py-2 px-4 rounded disabled:opacity-50"
             >
-              {tokenMinting ? `Minting with ${selectedToken}...` : `Mint with ${selectedToken}`}
+              {tokenMinting ? \`Minting with \${selectedToken}...\` : \`Mint with \${selectedToken}\`}
             </button>
             {tokenStatus && <p>{tokenStatus}</p>}
           </div>
