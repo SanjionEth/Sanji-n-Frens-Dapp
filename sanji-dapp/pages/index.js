@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { useAccount } from "wagmi";
-import { CustomConnectButton } from "connectkit";
+import { ConnectButton } from "connectkit";
 
 export default function Home() {
   const { isConnected } = useAccount();
@@ -40,16 +40,8 @@ export default function Home() {
       </div>
 
       {/* Wallet Connect Button (on Sanji medallion) */}
-      <div className="absolute left-[165px] top-[380px] w-[60px] h-[60px] z-30">
-        <CustomConnectButton>
-          {({ show }) => (
-            <button
-              className="w-full h-full bg-transparent pointer-events-auto"
-              title="Connect Wallet"
-              onClick={show}
-            />
-          )}
-        </CustomConnectButton>
+      <div className="absolute left-[165px] top-[380px] w-[60px] h-[60px] z-30 pointer-events-auto">
+        <ConnectButton />
       </div>
     </main>
   );
