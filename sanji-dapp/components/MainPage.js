@@ -1,8 +1,6 @@
-
 import Image from "next/image";
 import { useAccount, useSigner } from "wagmi";
 import { ethers } from "ethers";
-import { ConnectButton } from "connectkit";
 import useSanjiMint from "../hooks/useSanjiMint";
 import useStablecoinMint from "../hooks/useStablecoinMint";
 import useSpecialCardMint from "../hooks/useSpecialCardMint";
@@ -12,7 +10,7 @@ function formatSeconds(seconds) {
   const days = Math.floor(seconds / (60 * 60 * 24));
   const hours = Math.floor((seconds % (60 * 60 * 24)) / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
-  return \`\${days}d \${hours}h \${minutes}m\`;
+  return `${days}d ${hours}h ${minutes}m`;
 }
 
 export default function MainPage() {
@@ -91,18 +89,6 @@ export default function MainPage() {
         priority
         className="pointer-events-none z-0"
       />
-
-      {/* Wallet status message */}
-      {isConnected ? (
-        <p className="absolute top-4 right-4 z-50 text-white bg-green-600 px-3 py-1 rounded">✅ Wallet Connected</p>
-      ) : (
-        <p className="absolute top-4 right-4 z-50 text-white bg-red-600 px-3 py-1 rounded">🔌 Please connect your wallet</p>
-      )}
-
-      {/* Wallet Connect Button (on Sanji medallion) */}
-      <div className="absolute left-[165px] top-[380px] w-[60px] h-[60px] z-30">
-        <ConnectButton />
-      </div>
 
       {/* Top nav buttons */}
       <div className="absolute top-4 left-4 z-20 flex gap-3">
