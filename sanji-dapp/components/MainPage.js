@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useAccount, useProvider } from "wagmi";
+import { useAccount, useProvider, useSigner } from "wagmi";
 import { ethers } from "ethers";
 import useSanjiMint from "../hooks/useSanjiMint";
 import useStablecoinMint from "../hooks/useStablecoinMint";
@@ -10,34 +10,35 @@ function formatSeconds(seconds) {
   const days = Math.floor(seconds / (60 * 60 * 24));
   const hours = Math.floor((seconds % (60 * 60 * 24)) / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
-  return `${days}d ${hours}h ${minutes}m`;
+  return `\${days}d \${hours}h \${minutes}m`;
 }
 
 export default function MainPage() {
   const { isConnected } = useAccount();
   const provider = useProvider();
+  const { data: signer } = useSigner();
 
   const {
     mintWithSanji,
     minting: sanjiMinting,
     status: sanjiStatus
-  } = useSanjiMint(provider);
+  } = useSanjiMint(signer || provider);
 
   const {
     mintWithToken,
     minting: tokenMinting,
     status: tokenStatus
-  } = useStablecoinMint(provider);
+  } = useStablecoinMint(signer || provider);
 
   const {
     cooldownActive,
     timeLeft,
     hasMinted,
     supply
-  } = useMintStatus(provider);
+  } = useMintStatus(signer || provider);
 
   const whistle = useSpecialCardMint({
-    provider,
+    provider: signer || provider,
     contractAddress: "0x0D23e63Db1D2e7346d0c09122c59b393557b98A2",
     cardType: "Sanji's Tactical Whistle",
     requiredSanji: ethers.parseUnits("5000000", 18),
@@ -45,7 +46,7 @@ export default function MainPage() {
   });
 
   const altman = useSpecialCardMint({
-    provider,
+    provider: signer || provider,
     contractAddress: "0x48E15976C004FD90fD34dab36F1C06A543579D94",
     cardType: "Sam Altman's First Code",
     requiredSanji: ethers.parseUnits("10000000", 18),
@@ -69,7 +70,7 @@ export default function MainPage() {
   };
 
   const handleMint = async (type) => {
-    if (!provider) return;
+    if (!signer) return;
     if (type === "base") {
       await mintWithSanjiOrToken();
     } else if (type === "whistle") {
