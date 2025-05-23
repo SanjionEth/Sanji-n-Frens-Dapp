@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useAccount, useProvider, useSigner } from "wagmi";
+import { useAccount, useSigner } from "wagmi";
 import { ethers } from "ethers";
 import useSanjiMint from "../hooks/useSanjiMint";
 import useStablecoinMint from "../hooks/useStablecoinMint";
@@ -15,30 +15,31 @@ function formatSeconds(seconds) {
 
 export default function MainPage() {
   const { isConnected } = useAccount();
-  const provider = useProvider();
   const { data: signer } = useSigner();
+
+  const provider = signer ?? new ethers.providers.JsonRpcProvider("https://mainnet.infura.io/v3/YOUR_INFURA_KEY");
 
   const {
     mintWithSanji,
     minting: sanjiMinting,
     status: sanjiStatus
-  } = useSanjiMint(signer || provider);
+  } = useSanjiMint(provider);
 
   const {
     mintWithToken,
     minting: tokenMinting,
     status: tokenStatus
-  } = useStablecoinMint(signer || provider);
+  } = useStablecoinMint(provider);
 
   const {
     cooldownActive,
     timeLeft,
     hasMinted,
     supply
-  } = useMintStatus(signer || provider);
+  } = useMintStatus(provider);
 
   const whistle = useSpecialCardMint({
-    provider: signer || provider,
+    provider,
     contractAddress: "0x0D23e63Db1D2e7346d0c09122c59b393557b98A2",
     cardType: "Sanji's Tactical Whistle",
     requiredSanji: ethers.parseUnits("5000000", 18),
@@ -46,7 +47,7 @@ export default function MainPage() {
   });
 
   const altman = useSpecialCardMint({
-    provider: signer || provider,
+    provider,
     contractAddress: "0x48E15976C004FD90fD34dab36F1C06A543579D94",
     cardType: "Sam Altman's First Code",
     requiredSanji: ethers.parseUnits("10000000", 18),
@@ -70,7 +71,7 @@ export default function MainPage() {
   };
 
   const handleMint = async (type) => {
-    if (!signer) return;
+    if (!provider) return;
     if (type === "base") {
       await mintWithSanjiOrToken();
     } else if (type === "whistle") {
@@ -90,20 +91,14 @@ export default function MainPage() {
         priority
         className="pointer-events-none z-0"
       />
-
-      {/* Top nav buttons */}
       <div className="absolute top-4 left-4 z-20 flex gap-3">
         <a href="https://sanjioneth.fun/" target="_blank" rel="noopener noreferrer">
           <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Sanji Website"> </button>
         </a>
-        <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
-        <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
-        <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
-        <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
-        <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
+        {Array(5).fill().map((_, i) => (
+          <button key={i} className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
+        ))}
       </div>
-
-      {/* Mint Buttons */}
       <div className="absolute z-10 text-white text-sm">
         <button onClick={() => handleMint("altman")} className="absolute left-[438px] top-[540px] w-[120px] h-[100px] bg-transparent pointer-events-auto" title="Mint Altman's First Code"> </button>
         <button onClick={() => handleMint("whistle")} className="absolute left-[630px] top-[540px] w-[120px] h-[100px] bg-transparent pointer-events-auto" title="Mint Sanji's Tactical Whistle"> </button>

@@ -1,8 +1,11 @@
 import "../styles/globals.css";
+
 import { WagmiConfig, createConfig, http } from "wagmi";
 import { mainnet } from "wagmi/chains";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const WALLETCONNECT_PROJECT_ID = "cbf4d086650149bbedc3ebf58ff8855e";
 
 const config = createConfig(
   getDefaultConfig({
@@ -11,7 +14,7 @@ const config = createConfig(
     transports: {
       [mainnet.id]: http(),
     },
-    walletConnectProjectId: "cbf4d086650149bbedc3ebf58ff8855e",
+    walletConnectProjectId: WALLETCONNECT_PROJECT_ID,
   })
 );
 
@@ -21,7 +24,7 @@ export default function App({ Component, pageProps }) {
   return (
     <QueryClientProvider client={queryClient}>
       <WagmiConfig config={config}>
-        <ConnectKitProvider theme="auto">
+        <ConnectKitProvider theme="auto" options={{ enforceSupportedChains: true }}>
           <Component {...pageProps} />
         </ConnectKitProvider>
       </WagmiConfig>
