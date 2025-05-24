@@ -1,5 +1,4 @@
 import "../styles/globals.css";
-
 import { WagmiConfig, createConfig, http } from "wagmi";
 import { mainnet } from "wagmi/chains";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";

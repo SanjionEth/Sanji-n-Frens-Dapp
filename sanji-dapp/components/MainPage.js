@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { useAccount, useWalletClient } from "wagmi";
+import { useAccount } from "wagmi";
+import { useWalletClient, usePublicClient } from "wagmi";
 import { ethers } from "ethers";
 import useSanjiMint from "../hooks/useSanjiMint";
 import useStablecoinMint from "../hooks/useStablecoinMint";
@@ -16,6 +17,7 @@ function formatSeconds(seconds) {
 export default function MainPage() {
   const { isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient();
 
   const {
     mintWithSanji,
@@ -34,7 +36,7 @@ export default function MainPage() {
     timeLeft,
     hasMinted,
     supply
-  } = useMintStatus(walletClient);
+  } = useMintStatus(publicClient);
 
   const whistle = useSpecialCardMint({
     provider: walletClient,
@@ -95,11 +97,9 @@ export default function MainPage() {
         <a href="https://sanjioneth.fun/" target="_blank" rel="noopener noreferrer">
           <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Sanji Website"> </button>
         </a>
-        <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
-        <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
-        <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
-        <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
-        <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
+        {[...Array(5)].map((_, i) => (
+          <button key={i} className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
+        ))}
       </div>
 
       {/* Mint Buttons */}
