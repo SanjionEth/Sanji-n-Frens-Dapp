@@ -32,14 +32,6 @@ export default function MainPage() {
     maxSupply: 200
   });
 
-  const altman = useSpecialCardMint({
-    provider: walletClient,
-    contractAddress: "0x48E15976C004FD90fD34dab36F1C06A543579D94",
-    cardType: "Sam Altman's First Code",
-    requiredSanji: ethers.parseUnits("10000000", 18),
-    maxSupply: 100
-  });
-
   const handleSanjiMint = async () => {
     try {
       const result = await mintWithSanji();
@@ -67,15 +59,6 @@ export default function MainPage() {
     }
   };
 
-  const handleAltmanMint = async () => {
-    try {
-      await altman.mint();
-    } catch (err) {
-      console.error("Altman mint error:", err);
-      altman.status = "❌ You need at least 10,000,000 SANJI tokens to mint this.";
-    }
-  };
-
   return (
     <main className="relative w-screen h-screen overflow-hidden text-white">
       <Image
@@ -96,7 +79,7 @@ export default function MainPage() {
           disabled={sanjiMinting}
           className="bg-green-600 px-4 py-2 rounded disabled:opacity-50"
         >
-          {sanjiMinting ? "Minting..." : "Mint with SANJI"}
+          {sanjiMinting ? "Minting..." : "Mint Sanji 'n Frens Base Deck"}
         </button>
 
         {sanjiStatus && <p>{sanjiStatus}</p>}
@@ -124,7 +107,6 @@ export default function MainPage() {
 
         <hr className="my-4" />
 
-        {/* Tactical Whistle Card */}
         <button
           onClick={handleWhistleMint}
           disabled={whistle.minting || whistle.cooldownActive || whistle.hasMinted}
@@ -134,19 +116,7 @@ export default function MainPage() {
         </button>
         <p>{whistle.status}</p>
         <p>Remaining: {whistle.remaining}</p>
-
-        {/* Altman's First Code Card */}
-        <button
-          onClick={handleAltmanMint}
-          disabled={altman.minting || altman.cooldownActive || altman.hasMinted}
-          className="bg-yellow-500 px-4 py-2 rounded disabled:opacity-50"
-        >
-          {altman.minting ? "Minting..." : "Mint Sam Altman’s First Code"}
-        </button>
-        <p>{altman.status}</p>
-        <p>Remaining: {altman.remaining}</p>
       </div>
     </main>
   );
 }
-
