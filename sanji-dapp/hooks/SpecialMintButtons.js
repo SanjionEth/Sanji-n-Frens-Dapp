@@ -1,4 +1,5 @@
 import { useAccount } from "wagmi";
+import { ethers } from "ethers";
 import useSpecialCardMint from "../hooks/useSpecialCardMint";
 
 function formatSeconds(seconds) {
@@ -11,10 +12,9 @@ function formatSeconds(seconds) {
 export default function SpecialMintButtons({ provider }) {
   const { isConnected } = useAccount();
 
-  // ✅ Replace with deployed contract addresses
   const whistleConfig = {
     provider,
-    contractAddress: "0xWhistleNFTMainnetAddress",
+    contractAddress: "0x0D23e63Db1D2e7346d0c09122c59b393557b98A2",
     cardType: "Sanji's Tactical Whistle",
     requiredSanji: ethers.parseUnits("5000000", 18),
     maxSupply: 200,
@@ -22,7 +22,7 @@ export default function SpecialMintButtons({ provider }) {
 
   const codeConfig = {
     provider,
-    contractAddress: "0xFirstCodeNFTMainnetAddress",
+    contractAddress: "0x48E15976C004FD90fD34dab36F1C06A543579D94",
     cardType: "Sam Altman's First Code",
     requiredSanji: ethers.parseUnits("10000000", 18),
     maxSupply: 100,

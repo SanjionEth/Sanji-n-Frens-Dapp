@@ -27,7 +27,7 @@ export default function useSpecialCardMint({
       try {
         const signer = provider.getSigner();
         const wallet = await signer.getAddress();
-        const contract = new ethers.Contract(contractAddress, SpecialCardABI.abi, provider);
+        const contract = new ethers.Contract(contractAddress, SpecialCardABI.abi, signer);
 
         const lastTime = await contract.lastMintTime(wallet, cardType);
         const minted = await contract.hasMintedType(wallet, cardType);
@@ -38,15 +38,18 @@ export default function useSpecialCardMint({
         if (diff < COOLDOWN_SECONDS) {
           setCooldownActive(true);
           setTimeLeft(COOLDOWN_SECONDS - diff);
+        } else {
+          setCooldownActive(false);
+          setTimeLeft(0);
         }
 
         const current = await contract.currentTokenId();
         setSupply(Number(current));
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching special card mint status:", err);
       }
     })();
-  }, [provider]);
+  }, [provider, contractAddress, cardType]);
 
   const mint = async () => {
     try {
@@ -55,20 +58,25 @@ export default function useSpecialCardMint({
 
       const signer = provider.getSigner();
       const wallet = await signer.getAddress();
+
       const sanji = new ethers.Contract(SANJI_ADDRESS, ERC20ABI, signer);
       const balance = await sanji.balanceOf(wallet);
-
-      if (balance < requiredSanji) {
+      if (balance.lt(requiredSanji)) {
         setStatus("❌ Not enough SANJI tokens.");
         return;
       }
 
+      setStatus("Minting...");
       const contract = new ethers.Contract(contractAddress, SpecialCardABI.abi, signer);
       const tx = await contract.mintSpecialCard(wallet);
       await tx.wait();
+
       setStatus("✅ Minted successfully!");
+      setHasMinted(true);
+      setCooldownActive(true);
+      setTimeLeft(COOLDOWN_SECONDS);
     } catch (err) {
-      console.error(err);
+      console.error("Mint failed:", err);
       setStatus("❌ Mint failed.");
     } finally {
       setMinting(false);
