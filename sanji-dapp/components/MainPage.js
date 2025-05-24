@@ -1,7 +1,9 @@
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useAccount } from "wagmi";
-import { useWalletClient, usePublicClient } from "wagmi";
 import { ethers } from "ethers";
+import { ConnectButton } from "connectkit";
+
 import useSanjiMint from "../hooks/useSanjiMint";
 import useStablecoinMint from "../hooks/useStablecoinMint";
 import useSpecialCardMint from "../hooks/useSpecialCardMint";
@@ -14,32 +16,34 @@ function formatSeconds(seconds) {
   return `${days}d ${hours}h ${minutes}m`;
 }
 
-export default function MainPage() {
+function MainPage() {
   const { isConnected } = useAccount();
-  const { data: walletClient } = useWalletClient();
-  const publicClient = usePublicClient();
+
+  const provider = typeof window !== "undefined" && window.ethereum
+    ? new ethers.BrowserProvider(window.ethereum)
+    : null;
 
   const {
     mintWithSanji,
     minting: sanjiMinting,
     status: sanjiStatus
-  } = useSanjiMint(walletClient);
+  } = useSanjiMint(provider);
 
   const {
     mintWithToken,
     minting: tokenMinting,
     status: tokenStatus
-  } = useStablecoinMint(walletClient);
+  } = useStablecoinMint(provider);
 
   const {
     cooldownActive,
     timeLeft,
     hasMinted,
     supply
-  } = useMintStatus(publicClient);
+  } = useMintStatus(provider);
 
   const whistle = useSpecialCardMint({
-    provider: walletClient,
+    provider,
     contractAddress: "0x0D23e63Db1D2e7346d0c09122c59b393557b98A2",
     cardType: "Sanji's Tactical Whistle",
     requiredSanji: ethers.parseUnits("5000000", 18),
@@ -47,7 +51,7 @@ export default function MainPage() {
   });
 
   const altman = useSpecialCardMint({
-    provider: walletClient,
+    provider,
     contractAddress: "0x48E15976C004FD90fD34dab36F1C06A543579D94",
     cardType: "Sam Altman's First Code",
     requiredSanji: ethers.parseUnits("10000000", 18),
@@ -71,7 +75,7 @@ export default function MainPage() {
   };
 
   const handleMint = async (type) => {
-    if (!walletClient) return;
+    if (!provider) return;
     if (type === "base") {
       await mintWithSanjiOrToken();
     } else if (type === "whistle") {
@@ -82,48 +86,53 @@ export default function MainPage() {
   };
 
   return (
-    <main className="relative w-screen h-screen overflow-hidden">
-      <Image
-        src="/mint_background.jpg"
-        alt="Sanji Meme Matchup Background"
-        layout="fill"
-        objectFit="cover"
-        priority
-        className="pointer-events-none z-0"
-      />
+    <>
+      <ConnectButton />
+      <main className="relative w-screen h-screen overflow-hidden">
+        <Image
+          src="/mint_background.jpg"
+          alt="Sanji Meme Matchup Background"
+          layout="fill"
+          objectFit="cover"
+          priority
+          className="pointer-events-none z-0"
+        />
 
-      {/* Top nav buttons */}
-      <div className="absolute top-4 left-4 z-20 flex gap-3">
-        <a href="https://sanjioneth.fun/" target="_blank" rel="noopener noreferrer">
-          <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Sanji Website"> </button>
-        </a>
-        {[...Array(5)].map((_, i) => (
-          <button key={i} className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
-        ))}
-      </div>
+        <div className="absolute top-4 left-4 z-20 flex gap-3">
+          <a href="https://sanjioneth.fun/" target="_blank" rel="noopener noreferrer">
+            <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Sanji Website"> </button>
+          </a>
+          <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
+          <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
+          <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
+          <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
+          <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
+        </div>
 
-      {/* Mint Buttons */}
-      <div className="absolute z-10 text-white text-sm">
-        <button onClick={() => handleMint("altman")} className="absolute left-[438px] top-[540px] w-[120px] h-[100px] bg-transparent pointer-events-auto" title="Mint Altman's First Code"> </button>
-        <button onClick={() => handleMint("whistle")} className="absolute left-[630px] top-[540px] w-[120px] h-[100px] bg-transparent pointer-events-auto" title="Mint Sanji's Tactical Whistle"> </button>
-        <button onClick={() => handleMint("base")} className="absolute left-[825px] top-[530px] w-[130px] h-[115px] bg-transparent pointer-events-auto" title="Mint Base Deck"> </button>
+        <div className="absolute z-10 text-white text-sm">
+          <button onClick={() => handleMint("altman")} className="absolute left-[438px] top-[540px] w-[120px] h-[100px] bg-transparent pointer-events-auto" title="Mint Altman's First Code"> </button>
+          <button onClick={() => handleMint("whistle")} className="absolute left-[630px] top-[540px] w-[120px] h-[100px] bg-transparent pointer-events-auto" title="Mint Sanji's Tactical Whistle"> </button>
+          <button onClick={() => handleMint("base")} className="absolute left-[825px] top-[530px] w-[130px] h-[115px] bg-transparent pointer-events-auto" title="Mint Base Deck"> </button>
 
-        {cooldownActive && (
-          <p className="absolute top-[660px] left-[820px] bg-black bg-opacity-70 px-2 py-1 rounded">
-            ⏳ Base deck cooldown: {formatSeconds(timeLeft)}
-          </p>
-        )}
-        {sanjiStatus && (
-          <p className="absolute top-[680px] left-[820px] bg-black bg-opacity-70 px-2 py-1 rounded">
-            {sanjiStatus}
-          </p>
-        )}
-        {tokenStatus && (
-          <p className="absolute top-[700px] left-[820px] bg-black bg-opacity-70 px-2 py-1 rounded">
-            {tokenStatus}
-          </p>
-        )}
-      </div>
-    </main>
+          {cooldownActive && (
+            <p className="absolute top-[660px] left-[820px] bg-black bg-opacity-70 px-2 py-1 rounded">
+              ⏳ Base deck cooldown: {formatSeconds(timeLeft)}
+            </p>
+          )}
+          {sanjiStatus && (
+            <p className="absolute top-[680px] left-[820px] bg-black bg-opacity-70 px-2 py-1 rounded">
+              {sanjiStatus}
+            </p>
+          )}
+          {tokenStatus && (
+            <p className="absolute top-[700px] left-[820px] bg-black bg-opacity-70 px-2 py-1 rounded">
+              {tokenStatus}
+            </p>
+          )}
+        </div>
+      </main>
+    </>
   );
 }
+
+export default dynamic(() => Promise.resolve(MainPage), { ssr: false });
