@@ -1,9 +1,11 @@
+
 import Image from "next/image";
 import { useAccount, useWalletClient } from "wagmi";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import useSanjiMint from "../hooks/useSanjiMint";
 import useStablecoinMint from "../hooks/useStablecoinMint";
 import useSpecialCardMint from "../hooks/useSpecialCardMint";
+import useMintStatus from "../hooks/useMintStatus";
 import { ethers } from "ethers";
 
 export default function MainPage() {
@@ -24,12 +26,24 @@ export default function MainPage() {
     status: tokenStatus
   } = useStablecoinMint(walletClient);
 
+  const {
+    supply: baseSupply
+  } = useMintStatus(walletClient);
+
   const whistle = useSpecialCardMint({
     provider: walletClient,
     contractAddress: "0x0D23e63Db1D2e7346d0c09122c59b393557b98A2",
     cardType: "Sanji's Tactical Whistle",
     requiredSanji: ethers.parseUnits("5000000", 18),
     maxSupply: 200
+  });
+
+  const altman = useSpecialCardMint({
+    provider: walletClient,
+    contractAddress: "0x48E15976C004FD90fD34dab36F1C06A543579D94",
+    cardType: "Sam Altman's First Code",
+    requiredSanji: ethers.parseUnits("10000000", 18),
+    maxSupply: 100
   });
 
   const handleSanjiMint = async () => {
@@ -59,6 +73,15 @@ export default function MainPage() {
     }
   };
 
+  const handleAltmanMint = async () => {
+    try {
+      await altman.mint();
+    } catch (err) {
+      console.error("Altman mint error:", err);
+      altman.status = "❌ You need at least 10,000,000 SANJI tokens to mint this.";
+    }
+  };
+
   return (
     <main className="relative w-screen h-screen overflow-hidden text-white">
       <Image
@@ -83,6 +106,7 @@ export default function MainPage() {
         </button>
 
         {sanjiStatus && <p>{sanjiStatus}</p>}
+        <p>Remaining Base Deck: {baseSupply !== null ? `${10000 - baseSupply} / 10000` : "Loading..."}</p>
 
         {showStablecoin && (
           <div className="space-y-2">
@@ -116,6 +140,16 @@ export default function MainPage() {
         </button>
         <p>{whistle.status}</p>
         <p>Remaining: {whistle.remaining}</p>
+
+        <button
+          onClick={handleAltmanMint}
+          disabled={altman.minting || altman.cooldownActive || altman.hasMinted}
+          className="bg-yellow-600 px-4 py-2 rounded disabled:opacity-50"
+        >
+          {altman.minting ? "Minting..." : "Mint Sam Altman's First Code"}
+        </button>
+        <p>{altman.status}</p>
+        <p>Remaining: {altman.remaining}</p>
       </div>
     </main>
   );
