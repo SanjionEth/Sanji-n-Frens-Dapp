@@ -22,14 +22,13 @@ export default function useSanjiMint(walletClient) {
 
       const sanji = new ethers.Contract(SANJI_ADDRESS, ERC20ABI, signer);
       const balance = await sanji.balanceOf(wallet);
-
       if (balance.lt(SANJI_REQUIRED)) {
         setStatus("❌ You need at least 1,000,000 SANJI tokens to mint for free.");
         return false;
       }
 
       const baseDeck = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeckABI.abi, signer);
-      const tx = await baseDeck.mintBaseDeck(ethers.ZeroAddress); // signal free mint
+      const tx = await baseDeck.mintBaseDeck(ethers.constants.AddressZero);
       await tx.wait();
 
       setStatus("✅ Base Deck minted for free using SANJI!");
@@ -44,4 +43,4 @@ export default function useSanjiMint(walletClient) {
   };
 
   return { mintWithSanji, minting, status };
-}
+};
