@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { ethers } from "ethers";
-import BaseDeckABI from "../contracts/BaseDeckNFT.json";
-import ERC20ABI from "../contracts/erc20.json";
+import { BrowserProvider, Contract, parseUnits, ZeroAddress } from "ethers";
+import BaseDeckArtifact from "../contracts/BaseDeckNFT.json";
+import ERC20Artifact from "../contracts/erc20.json";
 
 const BASE_DECK_ADDRESS = "0x49F41bc6Fd5126Fd07aF058a8Cb957c5262e6221";
 const SANJI_ADDRESS = "0x8E0B3E3Cb4468B6aa07a64E69DEb72aeA8eddC6F";
-const SANJI_REQUIRED = ethers.parseUnits("1000000", 18);
+const SANJI_REQUIRED = parseUnits("1000000", 18);
+
+const BaseDeckABI = BaseDeckArtifact.abi;
+const ERC20ABI = ERC20Artifact.abi;
 
 export default function useSanjiMint(walletClient) {
   const [minting, setMinting] = useState(false);
@@ -16,26 +19,27 @@ export default function useSanjiMint(walletClient) {
       setMinting(true);
       setStatus("Checking SANJI balance...");
 
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = new BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       const wallet = await signer.getAddress();
 
-      const sanji = new ethers.Contract(SANJI_ADDRESS, ERC20ABI, signer);
+      const sanji = new Contract(SANJI_ADDRESS, ERC20ABI, signer);
       const balance = await sanji.balanceOf(wallet);
-      if (balance.lt(SANJI_REQUIRED)) {
+
+      if (balance < SANJI_REQUIRED) {
         setStatus("❌ You need at least 1,000,000 SANJI tokens to mint for free.");
         return false;
       }
 
-      const baseDeck = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeckABI.abi, signer);
-      const tx = await baseDeck.mintBaseDeck(ethers.constants.AddressZero);
+      const baseDeck = new Contract(BASE_DECK_ADDRESS, BaseDeckABI, signer);
+      const tx = await baseDeck.mintBaseDeck(ZeroAddress);
       await tx.wait();
 
       setStatus("✅ Base Deck minted for free using SANJI!");
       return true;
     } catch (err) {
-      console.error("SANJI mint failed:", err);
-      setStatus("❌ SANJI mint failed.");
+      console.error("❌ SANJI mint failed:", err);
+      setStatus(`❌ SANJI mint failed: ${err.message || "Unknown error"}`);
       return false;
     } finally {
       setMinting(false);
@@ -43,4 +47,4 @@ export default function useSanjiMint(walletClient) {
   };
 
   return { mintWithSanji, minting, status };
-};
+}
