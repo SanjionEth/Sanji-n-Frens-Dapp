@@ -1,6 +1,6 @@
-
 import Image from "next/image";
 import { useAccount, useWalletClient } from "wagmi";
+import { ConnectButton } from "connectkit";
 import { ethers } from "ethers";
 import useSanjiMint from "../hooks/useSanjiMint";
 import useStablecoinMint from "../hooks/useStablecoinMint";
@@ -91,16 +91,19 @@ export default function MainPage() {
         className="pointer-events-none z-0"
       />
 
+      {/* Wallet connect button (on Sanji medallion) */}
+      <div className="absolute left-[165px] top-[380px] w-[60px] h-[60px] z-30">
+        <ConnectButton />
+      </div>
+
       {/* Top nav buttons */}
       <div className="absolute top-4 left-4 z-20 flex gap-3">
         <a href="https://sanjioneth.fun/" target="_blank" rel="noopener noreferrer">
           <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Sanji Website"> </button>
         </a>
-        <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
-        <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
-        <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
-        <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
-        <button className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
+        {[...Array(5)].map((_, i) => (
+          <button key={i} className="w-36 h-10 bg-transparent pointer-events-auto" title="Coming Soon"> </button>
+        ))}
       </div>
 
       {/* Mint Buttons */}

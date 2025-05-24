@@ -25,7 +25,8 @@ export default function useSpecialCardMint({
 
     (async () => {
       try {
-        const signer = provider.getSigner();
+        const ethersProvider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await ethersProvider.getSigner();
         const wallet = await signer.getAddress();
         const contract = new ethers.Contract(contractAddress, SpecialCardABI.abi, signer);
 
@@ -56,14 +57,15 @@ export default function useSpecialCardMint({
       setMinting(true);
       setStatus("Checking SANJI balance...");
 
-      const signer = provider.getSigner();
+      const ethersProvider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await ethersProvider.getSigner();
       const wallet = await signer.getAddress();
 
       const sanji = new ethers.Contract(SANJI_ADDRESS, ERC20ABI, signer);
       const balance = await sanji.balanceOf(wallet);
       if (balance.lt(requiredSanji)) {
         setStatus("❌ Not enough SANJI tokens.");
-        return;
+        return false;
       }
 
       setStatus("Minting...");
@@ -75,9 +77,11 @@ export default function useSpecialCardMint({
       setHasMinted(true);
       setCooldownActive(true);
       setTimeLeft(COOLDOWN_SECONDS);
+      return true;
     } catch (err) {
       console.error("Mint failed:", err);
       setStatus("❌ Mint failed.");
+      return false;
     } finally {
       setMinting(false);
     }
