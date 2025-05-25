@@ -1,11 +1,9 @@
-
 import Image from "next/image";
 import { useAccount, useWalletClient } from "wagmi";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import useSanjiMint from "../hooks/useSanjiMint";
 import useStablecoinMint from "../hooks/useStablecoinMint";
 import useSpecialCardMint from "../hooks/useSpecialCardMint";
-import useMintStatus from "../hooks/useMintStatus";
 import { ethers } from "ethers";
 
 export default function MainPage() {
@@ -25,10 +23,6 @@ export default function MainPage() {
     minting: tokenMinting,
     status: tokenStatus
   } = useStablecoinMint(walletClient);
-
-  const {
-    supply: baseSupply
-  } = useMintStatus(walletClient);
 
   const whistle = useSpecialCardMint({
     provider: walletClient,
@@ -106,7 +100,6 @@ export default function MainPage() {
         </button>
 
         {sanjiStatus && <p>{sanjiStatus}</p>}
-        <p>Remaining Base Deck: {baseSupply !== null ? `${10000 - baseSupply} / 10000` : "Loading..."}</p>
 
         {showStablecoin && (
           <div className="space-y-2">
@@ -136,7 +129,7 @@ export default function MainPage() {
           disabled={whistle.minting || whistle.cooldownActive || whistle.hasMinted}
           className="bg-purple-600 px-4 py-2 rounded disabled:opacity-50"
         >
-          {whistle.minting ? "Minting..." : "Mint Sanji’s Tactical Whistle"}
+          {whistle.minting ? "Minting..." : "Mint Sanji’s Tactical Whistle (5M SANJI)"}
         </button>
         <p>{whistle.status}</p>
         <p>Remaining: {whistle.remaining}</p>
@@ -144,9 +137,9 @@ export default function MainPage() {
         <button
           onClick={handleAltmanMint}
           disabled={altman.minting || altman.cooldownActive || altman.hasMinted}
-          className="bg-yellow-600 px-4 py-2 rounded disabled:opacity-50"
+          className="bg-yellow-500 px-4 py-2 rounded disabled:opacity-50"
         >
-          {altman.minting ? "Minting..." : "Mint Sam Altman's First Code"}
+          {altman.minting ? "Minting..." : "Mint Sam Altman's First Code (10M SANJI)"}
         </button>
         <p>{altman.status}</p>
         <p>Remaining: {altman.remaining}</p>
