@@ -26,7 +26,7 @@ export default function MainPage() {
 
   const whistle = useSpecialCardMint({
     provider: walletClient,
-    contractAddress: "0x0D23e63Db1D2e7346d0c09122c59b393557b98A2",
+    contractAddress: "0x6aF7AeA72f78E97cF5A7358cacadF7213b888f98",
     cardType: "Sanji's Tactical Whistle",
     requiredSanji: ethers.parseUnits("5000000", 18),
     maxSupply: 200
@@ -34,7 +34,7 @@ export default function MainPage() {
 
   const altman = useSpecialCardMint({
     provider: walletClient,
-    contractAddress: "0x48E15976C004FD90fD34dab36F1C06A543579D94",
+    contractAddress: "0xA181c511cCD35F0791eb2D22C143A227dC29E705",
     cardType: "Sam Altman's First Code",
     requiredSanji: ethers.parseUnits("10000000", 18),
     maxSupply: 100

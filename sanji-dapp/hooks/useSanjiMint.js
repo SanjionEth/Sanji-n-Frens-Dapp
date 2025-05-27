@@ -3,7 +3,7 @@ import { BrowserProvider, Contract, parseUnits, ZeroAddress } from "ethers";
 import BaseDeckArtifact from "../contracts/BaseDeckNFT.json";
 import ERC20Artifact from "../contracts/erc20.json";
 
-const BASE_DECK_ADDRESS = "0x49F41bc6Fd5126Fd07aF058a8Cb957c5262e6221";
+const BASE_DECK_ADDRESS = "0xA6914Aba300F1280AA9b6038BD409c9E2700fab1";
 const SANJI_ADDRESS = "0x8E0B3E3Cb4468B6aa07a64E69DEb72aeA8eddC6F";
 const SANJI_REQUIRED = parseUnits("1000000", 18);
 
