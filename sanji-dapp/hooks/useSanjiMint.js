@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ethers } from "ethers";
-import BaseDeckABI from "../contracts/BaseDeckNFT.json";
-import ERC20ABI from "../contracts/erc20.json";
+import BaseDeck from "../contracts/BaseDeckNFT.json";
+import ERC20 from "../contracts/erc20.json";
 
 const BASE_DECK_ADDRESS = "0x4F8824F0c4185743Ec420b91C7163023d3a83587";
 const SANJI_ADDRESS = "0x8E0B3E3Cb4468B6aa07a64E69DEb72aeA8eddC6F";
@@ -20,7 +20,8 @@ export default function useSanjiMint(provider) {
       const signer = await browserProvider.getSigner();
       const wallet = await signer.getAddress();
 
-      const sanji = new ethers.Contract(SANJI_ADDRESS, ERC20ABI, browserProvider);
+      // ✅ Use .abi here
+      const sanji = new ethers.Contract(SANJI_ADDRESS, ERC20.abi, browserProvider);
       const balance = await sanji.balanceOf(wallet);
 
       if (balance < SANJI_REQUIRED) {
@@ -28,8 +29,8 @@ export default function useSanjiMint(provider) {
         return false;
       }
 
-      const baseDeck = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeckABI, signer);
-      const tx = await baseDeck.mintBaseDeck(ethers.ZeroAddress); // Signal free mint
+      const baseDeck = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeck.abi, signer);
+      const tx = await baseDeck.mintBaseDeck(wallet); // public mint now expects wallet address
       await tx.wait();
 
       setStatus("✅ Base Deck minted for free using SANJI!");
