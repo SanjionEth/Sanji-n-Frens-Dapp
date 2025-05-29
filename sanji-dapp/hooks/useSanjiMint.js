@@ -5,7 +5,7 @@ import ERC20 from "../contracts/erc20.json";
 
 const BASE_DECK_ADDRESS = "0x781e27C583B88751eCf73cd28909706c12E3fCe1";
 const SANJI_ADDRESS = "0x8E0B3E3Cb4468B6aa07a64E69DEb72aeA8eddC6F";
-const SANJI_REQUIRED = ethers.parseUnits("1000000", 18);
+const SANJI_REQUIRED = ethers.parseUnits("1000000", 18); // bigint
 
 export default function useSanjiMint(provider) {
   const [minting, setMinting] = useState(false);
@@ -23,14 +23,13 @@ export default function useSanjiMint(provider) {
       const sanji = new ethers.Contract(SANJI_ADDRESS, ERC20.abi, browserProvider);
       const balance = await sanji.balanceOf(wallet);
 
-      // ✅ BigInt-compatible comparison
-      if (balance.lt(SANJI_REQUIRED)) {
+      if (balance < SANJI_REQUIRED) {
         setStatus("❌ You need at least 1,000,000 SANJI tokens to mint for free.");
         return false;
       }
 
       const baseDeck = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeck.abi, signer);
-      const tx = await baseDeck.mintBaseDeck(wallet); // Wallet as recipient
+      const tx = await baseDeck.mintBaseDeck(wallet); // public mint now expects wallet address
       await tx.wait();
 
       setStatus("✅ Base Deck minted for free using SANJI!");
