@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import BaseDeck from "../contracts/BaseDeckNFT.json";
 import ERC20 from "../contracts/erc20.json";
 
-const BASE_DECK_ADDRESS = "0x4F8824F0c4185743Ec420b91C7163023d3a83587";
+const BASE_DECK_ADDRESS = "0x781e27C583B88751eCf73cd28909706c12E3fCe1";
 const SANJI_ADDRESS = "0x8E0B3E3Cb4468B6aa07a64E69DEb72aeA8eddC6F";
 const SANJI_REQUIRED = ethers.parseUnits("1000000", 18);
 

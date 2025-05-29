@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import BaseDeckABI from "../contracts/BaseDeckNFT.json";
 import ERC20ABI from "../contracts/erc20.json";
 
-const BASE_DECK_ADDRESS = "0x4F8824F0c4185743Ec420b91C7163023d3a83587";
+const BASE_DECK_ADDRESS = "0x781e27C583B88751eCf73cd28909706c12E3fCe1";
 const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 const USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
 const MINT_PRICE = ethers.parseUnits("25", 6); // USDC and USDT have 6 decimals
