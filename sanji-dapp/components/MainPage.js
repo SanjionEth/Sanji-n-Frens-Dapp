@@ -1,16 +1,21 @@
 import Image from "next/image";
 import { useAccount, useWalletClient } from "wagmi";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { ethers } from "ethers";
 import useSanjiMint from "../hooks/useSanjiMint";
 import useStablecoinMint from "../hooks/useStablecoinMint";
 import useSpecialCardMint from "../hooks/useSpecialCardMint";
-import { ethers } from "ethers";
+import BaseDeckABI from "../contracts/BaseDeckNFT.json";
+
+const BASE_DECK_ADDRESS = "0x781e27C583B88751eCf73cd28909706c12E3fCe1";
+const TOTAL_SUPPLY_LIMIT = 10000;
 
 export default function MainPage() {
   const { isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
   const [showStablecoin, setShowStablecoin] = useState(false);
   const [selectedToken, setSelectedToken] = useState("USDT");
+  const [baseDeckSupply, setBaseDeckSupply] = useState(null);
 
   const {
     mintWithSanji,
@@ -27,6 +32,7 @@ export default function MainPage() {
   const whistle = useSpecialCardMint({
     provider: walletClient,
     contractAddress: "0xaea80Dce0b8Fa39DbB27aDe30Ec0e7164ce8c5E5",
+    cardType: "Sanji's Tactical Whistle",
     requiredSanji: ethers.parseUnits("5000000", 18),
     maxSupply: 200
   });
@@ -34,6 +40,7 @@ export default function MainPage() {
   const altman = useSpecialCardMint({
     provider: walletClient,
     contractAddress: "0xF85Ec44370f1dCbea4765B7481bA83E8634062FA",
+    cardType: "Sam Altman's First Code",
     requiredSanji: ethers.parseUnits("10000000", 18),
     maxSupply: 100
   });
@@ -61,6 +68,7 @@ export default function MainPage() {
       await whistle.mint();
     } catch (err) {
       console.error("Whistle mint error:", err);
+      whistle.status = "❌ You need at least 5,000,000 SANJI tokens to mint this.";
     }
   };
 
@@ -69,15 +77,24 @@ export default function MainPage() {
       await altman.mint();
     } catch (err) {
       console.error("Altman mint error:", err);
+      altman.status = "❌ You need at least 10,000,000 SANJI tokens to mint this.";
     }
   };
 
-  const formatSeconds = (seconds) => {
-    const d = Math.floor(seconds / (3600 * 24));
-    const h = Math.floor((seconds % (3600 * 24)) / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    return `${d}d ${h}h ${m}m`;
-  };
+  useEffect(() => {
+    if (!walletClient) return;
+    (async () => {
+      try {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const contract = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeckABI.abi, provider);
+        const current = await contract.currentTokenId();
+        setBaseDeckSupply(`${TOTAL_SUPPLY_LIMIT - Number(current)} / ${TOTAL_SUPPLY_LIMIT}`);
+      } catch (err) {
+        console.error("Base Deck supply fetch failed:", err);
+        setBaseDeckSupply("Error");
+      }
+    })();
+  }, [walletClient]);
 
   return (
     <main className="relative w-screen h-screen overflow-hidden text-white">
@@ -125,6 +142,8 @@ export default function MainPage() {
           </div>
         )}
 
+        {baseDeckSupply && <p>Remaining Base Decks: {baseDeckSupply}</p>}
+
         <hr className="my-4" />
 
         <button
@@ -136,7 +155,6 @@ export default function MainPage() {
         </button>
         <p>{whistle.status}</p>
         <p>Remaining: {whistle.remaining}</p>
-        {whistle.cooldownActive && <p>⏳ Cooldown: {formatSeconds(whistle.timeLeft)}</p>}
 
         <button
           onClick={handleAltmanMint}
@@ -147,7 +165,6 @@ export default function MainPage() {
         </button>
         <p>{altman.status}</p>
         <p>Remaining: {altman.remaining}</p>
-        {altman.cooldownActive && <p>⏳ Cooldown: {formatSeconds(altman.timeLeft)}</p>}
       </div>
     </main>
   );
