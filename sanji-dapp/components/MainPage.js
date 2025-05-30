@@ -6,13 +6,6 @@ import useStablecoinMint from "../hooks/useStablecoinMint";
 import useSpecialCardMint from "../hooks/useSpecialCardMint";
 import { ethers } from "ethers";
 
-function formatSeconds(seconds) {
-  const days = Math.floor(seconds / (60 * 60 * 24));
-  const hours = Math.floor((seconds % (60 * 60 * 24)) / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  return `${days}d ${hours}h ${minutes}m`;
-}
-
 export default function MainPage() {
   const { isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
@@ -34,7 +27,6 @@ export default function MainPage() {
   const whistle = useSpecialCardMint({
     provider: walletClient,
     contractAddress: "0xaea80Dce0b8Fa39DbB27aDe30Ec0e7164ce8c5E5",
-    cardType: "Sanji's Tactical Whistle",
     requiredSanji: ethers.parseUnits("5000000", 18),
     maxSupply: 200
   });
@@ -42,7 +34,6 @@ export default function MainPage() {
   const altman = useSpecialCardMint({
     provider: walletClient,
     contractAddress: "0xF85Ec44370f1dCbea4765B7481bA83E8634062FA",
-    cardType: "Sam Altman's First Code",
     requiredSanji: ethers.parseUnits("10000000", 18),
     maxSupply: 100
   });
@@ -79,6 +70,13 @@ export default function MainPage() {
     } catch (err) {
       console.error("Altman mint error:", err);
     }
+  };
+
+  const formatSeconds = (seconds) => {
+    const d = Math.floor(seconds / (3600 * 24));
+    const h = Math.floor((seconds % (3600 * 24)) / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    return `${d}d ${h}h ${m}m`;
   };
 
   return (

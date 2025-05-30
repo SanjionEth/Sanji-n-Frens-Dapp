@@ -9,7 +9,6 @@ const COOLDOWN = 14 * 24 * 60 * 60;
 export default function useSpecialCardMint({
   provider,
   contractAddress,
-  cardType,
   requiredSanji,
   maxSupply
 }) {
@@ -21,7 +20,7 @@ export default function useSpecialCardMint({
   const [supply, setSupply] = useState(null);
 
   useEffect(() => {
-    if (!provider) return;
+    if (!provider || !contractAddress) return;
 
     (async () => {
       try {
@@ -30,7 +29,7 @@ export default function useSpecialCardMint({
         const wallet = await signer.getAddress();
         const contract = new ethers.Contract(contractAddress, SpecialCardABI.abi, signer);
 
-        const last = await contract.lastMintTime(wallet, cardType);
+        const last = await contract.lastMintTime(wallet);
         const now = Math.floor(Date.now() / 1000);
         const diff = now - Number(last);
 
@@ -52,7 +51,7 @@ export default function useSpecialCardMint({
         setStatus("❌ Error fetching status.");
       }
     })();
-  }, [provider]);
+  }, [provider, contractAddress]);
 
   const mint = async () => {
     try {
