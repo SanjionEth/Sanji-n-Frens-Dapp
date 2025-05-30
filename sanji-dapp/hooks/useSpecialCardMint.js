@@ -14,21 +14,23 @@ export default function useSpecialCardMint({ provider, contractAddress, cardType
   const [hasMinted, setHasMinted] = useState(false);
   const [supply, setSupply] = useState(null);
 
+  // Load mint status on hook mount
   useEffect(() => {
-    if (!provider) return;
+    if (!provider || !contractAddress) return;
 
     (async () => {
       try {
         const browserProvider = new ethers.BrowserProvider(window.ethereum);
         const signer = await browserProvider.getSigner();
         const wallet = await signer.getAddress();
+
         const contract = new ethers.Contract(contractAddress, SpecialCardABI.abi, signer);
 
-        const last = await contract.lastMintTime(wallet, cardType);
+        const last = await contract.lastMintTime(wallet);
         const now = Math.floor(Date.now() / 1000);
         const diff = now - Number(last);
 
-        const minted = await contract.hasMintedType(wallet, cardType);
+        const minted = await contract.hasMinted(wallet);
         setHasMinted(minted);
 
         if (diff < COOLDOWN) {
@@ -36,14 +38,16 @@ export default function useSpecialCardMint({ provider, contractAddress, cardType
           setTimeLeft(COOLDOWN - diff);
         }
 
-        const current = await contract.currentTokenId();
+        const current = await contract.currentSupply();
         setSupply(Number(current));
       } catch (err) {
-        console.error("SpecialCard status error:", err);
+        console.error("⚠️ Error loading mint status:", err);
+        setStatus("⚠️ Failed to load mint status.");
       }
     })();
-  }, [provider]);
+  }, [provider, contractAddress]);
 
+  // Mint the card
   const mint = async () => {
     try {
       setMinting(true);
@@ -53,10 +57,15 @@ export default function useSpecialCardMint({ provider, contractAddress, cardType
       const signer = await browserProvider.getSigner();
       const wallet = await signer.getAddress();
 
-      const token = new ethers.Contract(SANJI_ADDRESS, ERC20ABI, signer);
+      const token = new ethers.Contract(SANJI_ADDRESS, ERC20ABI.abi, signer);
       const balance = await token.balanceOf(wallet);
+
+      console.log("👛 Wallet:", wallet);
+      console.log("💰 Balance:", balance.toString());
+      console.log("📌 Required:", requiredSanji.toString());
+
       if (balance.lt(requiredSanji)) {
-        setStatus("❌ Not enough SANJI.");
+        setStatus(`❌ You need at least ${ethers.formatUnits(requiredSanji, 18)} SANJI to mint this card.`);
         return;
       }
 
@@ -65,13 +74,13 @@ export default function useSpecialCardMint({ provider, contractAddress, cardType
       const tx = await contract.mintSpecialCard(wallet);
       await tx.wait();
 
-      setStatus("✅ Minted!");
+      setStatus("✅ Special card minted!");
       setHasMinted(true);
       setCooldownActive(true);
       setTimeLeft(COOLDOWN);
     } catch (err) {
-      console.error("SpecialCard mint failed:", err);
-      setStatus("❌ Mint failed.");
+      console.error("❌ Mint error:", err);
+      setStatus(`❌ Mint failed: ${err.message || "Unknown error"}`);
     } finally {
       setMinting(false);
     }
