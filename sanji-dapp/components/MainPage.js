@@ -6,6 +6,13 @@ import useStablecoinMint from "../hooks/useStablecoinMint";
 import useSpecialCardMint from "../hooks/useSpecialCardMint";
 import { ethers } from "ethers";
 
+function formatSeconds(seconds) {
+  const days = Math.floor(seconds / (60 * 60 * 24));
+  const hours = Math.floor((seconds % (60 * 60 * 24)) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  return `${days}d ${hours}h ${minutes}m`;
+}
+
 export default function MainPage() {
   const { isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
@@ -58,21 +65,12 @@ export default function MainPage() {
     }
   };
 
-  const handleWhistleMint = async () => {
+  const handleSpecialMint = async (type) => {
+    const card = type === "whistle" ? whistle : altman;
     try {
-      await whistle.mint();
+      await card.mint();
     } catch (err) {
-      console.error("Whistle mint error:", err);
-      whistle.status = "❌ You need at least 5,000,000 SANJI tokens to mint this.";
-    }
-  };
-
-  const handleAltmanMint = async () => {
-    try {
-      await altman.mint();
-    } catch (err) {
-      console.error("Altman mint error:", err);
-      altman.status = "❌ You need at least 10,000,000 SANJI tokens to mint this.";
+      console.error("Special card mint error:", err);
     }
   };
 
@@ -88,8 +86,8 @@ export default function MainPage() {
       />
 
       <div className="absolute top-4 left-4 z-20 p-4 bg-black bg-opacity-70 rounded space-y-4">
-        <p>✅ useAccount is working: {isConnected ? "Connected" : "Not connected"}</p>
-        <p>🧪 useWalletClient result: {walletClient ? "✅ WalletClient available" : "❌ WalletClient not available"}</p>
+        <p>✅ useAccount: {isConnected ? "Connected" : "Not connected"}</p>
+        <p>🧪 useWalletClient: {walletClient ? "✅ WalletClient available" : "❌ Not available"}</p>
 
         <button
           onClick={handleSanjiMint}
@@ -98,7 +96,6 @@ export default function MainPage() {
         >
           {sanjiMinting ? "Minting..." : "Mint Sanji 'n Frens Base Deck"}
         </button>
-
         {sanjiStatus && <p>{sanjiStatus}</p>}
 
         {showStablecoin && (
@@ -125,25 +122,28 @@ export default function MainPage() {
         <hr className="my-4" />
 
         <button
-          onClick={handleWhistleMint}
+          onClick={() => handleSpecialMint("whistle")}
           disabled={whistle.minting || whistle.cooldownActive || whistle.hasMinted}
           className="bg-purple-600 px-4 py-2 rounded disabled:opacity-50"
         >
           {whistle.minting ? "Minting..." : "Mint Sanji’s Tactical Whistle (5M SANJI)"}
         </button>
-        <p>{whistle.status}</p>
-        <p>Remaining: {whistle.remaining}</p>
+        {whistle.cooldownActive && <p>⏳ Cooldown: {formatSeconds(whistle.timeLeft)}</p>}
+        {whistle.status && <p>{whistle.status}</p>}
+        <p>Remaining: {whistle.remaining || "Loading..."}</p>
 
         <button
-          onClick={handleAltmanMint}
+          onClick={() => handleSpecialMint("altman")}
           disabled={altman.minting || altman.cooldownActive || altman.hasMinted}
           className="bg-yellow-500 px-4 py-2 rounded disabled:opacity-50"
         >
           {altman.minting ? "Minting..." : "Mint Sam Altman's First Code (10M SANJI)"}
         </button>
-        <p>{altman.status}</p>
-        <p>Remaining: {altman.remaining}</p>
+        {altman.cooldownActive && <p>⏳ Cooldown: {formatSeconds(altman.timeLeft)}</p>}
+        {altman.status && <p>{altman.status}</p>}
+        <p>Remaining: {altman.remaining || "Loading..."}</p>
       </div>
     </main>
   );
 }
+
