@@ -6,6 +6,13 @@ import useStablecoinMint from "../hooks/useStablecoinMint";
 import useSpecialCardMint from "../hooks/useSpecialCardMint";
 import { ethers } from "ethers";
 
+function formatSeconds(seconds) {
+  const days = Math.floor(seconds / (60 * 60 * 24));
+  const hours = Math.floor((seconds % (60 * 60 * 24)) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  return `${days}d ${hours}h ${minutes}m`;
+}
+
 export default function MainPage() {
   const { isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
@@ -63,7 +70,6 @@ export default function MainPage() {
       await whistle.mint();
     } catch (err) {
       console.error("Whistle mint error:", err);
-      whistle.status = "❌ You need at least 5,000,000 SANJI tokens to mint this.";
     }
   };
 
@@ -72,7 +78,6 @@ export default function MainPage() {
       await altman.mint();
     } catch (err) {
       console.error("Altman mint error:", err);
-      altman.status = "❌ You need at least 10,000,000 SANJI tokens to mint this.";
     }
   };
 
@@ -124,7 +129,6 @@ export default function MainPage() {
 
         <hr className="my-4" />
 
-        {/* Sanji's Tactical Whistle */}
         <button
           onClick={handleWhistleMint}
           disabled={whistle.minting || whistle.cooldownActive || whistle.hasMinted}
@@ -132,13 +136,10 @@ export default function MainPage() {
         >
           {whistle.minting ? "Minting..." : "Mint Sanji’s Tactical Whistle (5M SANJI)"}
         </button>
-        {whistle.status && <p>{whistle.status}</p>}
-        {whistle.cooldownActive && whistle.timeLeft !== null && (
-          <p>⏳ Cooldown active: {Math.floor(whistle.timeLeft / 86400)}d {Math.floor((whistle.timeLeft % 86400) / 3600)}h</p>
-        )}
+        <p>{whistle.status}</p>
         <p>Remaining: {whistle.remaining}</p>
+        {whistle.cooldownActive && <p>⏳ Cooldown: {formatSeconds(whistle.timeLeft)}</p>}
 
-        {/* Altman's First Code */}
         <button
           onClick={handleAltmanMint}
           disabled={altman.minting || altman.cooldownActive || altman.hasMinted}
@@ -146,11 +147,9 @@ export default function MainPage() {
         >
           {altman.minting ? "Minting..." : "Mint Sam Altman's First Code (10M SANJI)"}
         </button>
-        {altman.status && <p>{altman.status}</p>}
-        {altman.cooldownActive && altman.timeLeft !== null && (
-          <p>⏳ Cooldown active: {Math.floor(altman.timeLeft / 86400)}d {Math.floor((altman.timeLeft % 86400) / 3600)}h</p>
-        )}
+        <p>{altman.status}</p>
         <p>Remaining: {altman.remaining}</p>
+        {altman.cooldownActive && <p>⏳ Cooldown: {formatSeconds(altman.timeLeft)}</p>}
       </div>
     </main>
   );
