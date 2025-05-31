@@ -1,184 +1,23 @@
-import Image from "next/image";
-import { useAccount, useWalletClient } from "wagmi";
-import { useState, useEffect } from "react";
-import useSanjiMint from "../hooks/useSanjiMint";
-import useStablecoinMint from "../hooks/useStablecoinMint";
-import useSpecialCardMint from "../hooks/useSpecialCardMint";
-import { ethers } from "ethers";
+<button
+  onClick={handleSanjiMint}
+  disabled={sanjiMinting || hasMinted || cooldownActive}
+  className={`px-4 py-2 rounded disabled:opacity-50 ${
+    hasMinted || cooldownActive
+      ? "bg-gray-600"
+      : "bg-green-600 hover:bg-green-700"
+  }`}
+>
+  {sanjiMinting
+    ? "Minting..."
+    : hasMinted
+    ? "Already Minted Base Deck"
+    : "Mint Sanji 'n Frens Base Deck"}
+</button>
 
-export default function MainPage() {
-  const { isConnected } = useAccount();
-  const { data: walletClient } = useWalletClient();
-  const [showStablecoin, setShowStablecoin] = useState(false);
-  const [selectedToken, setSelectedToken] = useState("USDT");
-  const [baseRemaining, setBaseRemaining] = useState("Loading...");
+{cooldownActive && (
+  <p className="text-yellow-400">
+    ⏳ Cooldown active. Try again in {Math.floor(timeLeft / 60)} minutes.
+  </p>
+)}
 
-  const {
-    mintWithSanji,
-    minting: sanjiMinting,
-    status: sanjiStatus,
-    hasMinted,
-    cooldownActive,
-    timeLeft
-  } = useSanjiMint(walletClient);
-
-  const {
-    mintWithToken,
-    minting: tokenMinting,
-    status: tokenStatus
-  } = useStablecoinMint(walletClient);
-
-  const whistle = useSpecialCardMint({
-    provider: walletClient,
-    contractAddress: "0xaea80Dce0b8Fa39DbB27aDe30Ec0e7164ce8c5E5",
-    cardType: "Sanji's Tactical Whistle",
-    requiredSanji: ethers.parseUnits("5000000", 18),
-    maxSupply: 200
-  });
-
-  const altman = useSpecialCardMint({
-    provider: walletClient,
-    contractAddress: "0xF85Ec44370f1dCbea4765B7481bA83E8634062FA",
-    cardType: "Sam Altman's First Code",
-    requiredSanji: ethers.parseUnits("10000000", 18),
-    maxSupply: 100
-  });
-
-  const handleSanjiMint = async () => {
-    try {
-      const result = await mintWithSanji();
-      if (!result) setShowStablecoin(true);
-    } catch (err) {
-      console.error("SANJI mint error:", err);
-      setShowStablecoin(true);
-    }
-  };
-
-  const handleStablecoinMint = async () => {
-    try {
-      await mintWithToken(selectedToken);
-    } catch (err) {
-      console.error("Stablecoin mint error:", err);
-    }
-  };
-
-  const handleWhistleMint = async () => {
-    try {
-      await whistle.mint();
-    } catch (err) {
-      console.error("Whistle mint error:", err);
-    }
-  };
-
-  const handleAltmanMint = async () => {
-    try {
-      await altman.mint();
-    } catch (err) {
-      console.error("Altman mint error:", err);
-    }
-  };
-
-  useEffect(() => {
-    async function fetchRemaining() {
-      try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const contract = new ethers.Contract(
-          "0x781e27C583B88751eCf73cd28909706c12E3fCe1",
-          ["function currentTokenId() view returns (uint256)"],
-          provider
-        );
-        const current = await contract.currentTokenId();
-        setBaseRemaining(`${10000 - Number(current)} / 10000`);
-      } catch (err) {
-        console.error("Error fetching base deck supply:", err);
-        setBaseRemaining("Error");
-      }
-    }
-    fetchRemaining();
-  }, []);
-
-  return (
-    <main className="relative w-screen h-screen overflow-hidden text-white">
-      <Image
-        src="/mint_background.jpg"
-        alt="Sanji Meme Matchup Background"
-        layout="fill"
-        objectFit="cover"
-        priority
-        className="pointer-events-none z-0"
-      />
-
-      <div className="absolute top-4 left-4 z-20 p-4 bg-black bg-opacity-70 rounded space-y-4">
-        <p>✅ useAccount is working: {isConnected ? "Connected" : "Not connected"}</p>
-        <p>🧪 useWalletClient result: {walletClient ? "✅ WalletClient available" : "❌ WalletClient not available"}</p>
-
-        <button
-          onClick={handleSanjiMint}
-          disabled={sanjiMinting || hasMinted || cooldownActive}
-          className={`px-4 py-2 rounded disabled:opacity-50 ${
-            hasMinted || cooldownActive ? "bg-gray-600" : "bg-green-600 hover:bg-green-700"
-          }`}
-        >
-          {sanjiMinting
-            ? "Minting..."
-            : hasMinted
-            ? "Already Minted Base Deck"
-            : "Mint Sanji 'n Frens Base Deck"}
-        </button>
-
-        {cooldownActive && (
-          <p className="text-yellow-400">
-            ⏳ Cooldown active. Try again in {Math.floor(timeLeft / 60)} minutes.
-          </p>
-        )}
-
-        {sanjiStatus && <p>{sanjiStatus}</p>}
-
-        {showStablecoin && (
-          <div className="space-y-2">
-            <select
-              value={selectedToken}
-              onChange={(e) => setSelectedToken(e.target.value)}
-              className="text-black p-1 rounded"
-            >
-              <option value="USDT">Pay with USDT ($25)</option>
-              <option value="USDC">Pay with USDC ($25)</option>
-            </select>
-            <button
-              onClick={handleStablecoinMint}
-              disabled={tokenMinting}
-              className="bg-blue-600 px-4 py-2 rounded disabled:opacity-50"
-            >
-              {tokenMinting ? "Minting..." : `Mint with ${selectedToken}`}
-            </button>
-            {tokenStatus && <p>{tokenStatus}</p>}
-          </div>
-        )}
-
-        <p className="text-sm">Remaining Base Decks: {baseRemaining}</p>
-
-        <hr className="my-4" />
-
-        <button
-          onClick={handleWhistleMint}
-          disabled={whistle.minting || whistle.cooldownActive || whistle.hasMinted}
-          className="bg-purple-600 px-4 py-2 rounded disabled:opacity-50"
-        >
-          {whistle.minting ? "Minting..." : "Mint Sanji’s Tactical Whistle (5M SANJI)"}
-        </button>
-        <p>{whistle.status}</p>
-        <p>Remaining: {whistle.remaining}</p>
-
-        <button
-          onClick={handleAltmanMint}
-          disabled={altman.minting || altman.cooldownActive || altman.hasMinted}
-          className="bg-yellow-500 px-4 py-2 rounded disabled:opacity-50"
-        >
-          {altman.minting ? "Minting..." : "Mint Sam Altman's First Code (10M SANJI)"}
-        </button>
-        <p>{altman.status}</p>
-        <p>Remaining: {altman.remaining}</p>
-      </div>
-    </main>
-  );
-}
+{sanjiStatus && <p>{sanjiStatus}</p>}
