@@ -1,25 +1,25 @@
 import Image from "next/image";
 import { useAccount, useWalletClient } from "wagmi";
 import { useState, useEffect } from "react";
+import { ethers } from "ethers";
 import useSanjiMint from "../hooks/useSanjiMint";
 import useStablecoinMint from "../hooks/useStablecoinMint";
 import useSpecialCardMint from "../hooks/useSpecialCardMint";
-import { ethers } from "ethers";
 
 export default function MainPage() {
   const { isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
   const [showStablecoin, setShowStablecoin] = useState(false);
   const [selectedToken, setSelectedToken] = useState("USDT");
-  const [baseRemaining, setBaseRemaining] = useState("Loading...");
+  const [remainingBaseDecks, setRemainingBaseDecks] = useState("Loading...");
 
   const {
     mintWithSanji,
     minting: sanjiMinting,
     status: sanjiStatus,
-    hasMinted,
-    cooldownActive,
-    timeLeft
+    hasMinted: hasMintedBase,
+    cooldownActive: cooldownBase,
+    timeLeft: timeLeftBase
   } = useSanjiMint(walletClient);
 
   const {
@@ -43,6 +43,23 @@ export default function MainPage() {
     requiredSanji: ethers.parseUnits("10000000", 18),
     maxSupply: 100
   });
+
+  useEffect(() => {
+    const fetchBaseDeckSupply = async () => {
+      if (!walletClient) return;
+      try {
+        const browserProvider = new ethers.BrowserProvider(window.ethereum);
+        const contract = new ethers.Contract("0x781e27C583B88751eCf73cd28909706c12E3fCe1", require("../contracts/BaseDeckNFT.json").abi, browserProvider);
+        const current = await contract.currentTokenId();
+        const max = 10000;
+        setRemainingBaseDecks(`${max - Number(current)} / ${max}`);
+      } catch (err) {
+        console.error("Base Deck supply fetch error:", err);
+        setRemainingBaseDecks("Error");
+      }
+    };
+    fetchBaseDeckSupply();
+  }, [walletClient]);
 
   const handleSanjiMint = async () => {
     try {
@@ -78,24 +95,7 @@ export default function MainPage() {
     }
   };
 
-  useEffect(() => {
-    async function fetchRemaining() {
-      try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const contract = new ethers.Contract(
-          "0x781e27C583B88751eCf73cd28909706c12E3fCe1",
-          ["function currentTokenId() view returns (uint256)"],
-          provider
-        );
-        const current = await contract.currentTokenId();
-        setBaseRemaining(`${10000 - Number(current)} / 10000`);
-      } catch (err) {
-        console.error("Error fetching base deck supply:", err);
-        setBaseRemaining("Error");
-      }
-    }
-    fetchRemaining();
-  }, []);
+  const isBaseDeckDisabled = sanjiMinting || hasMintedBase || cooldownBase;
 
   return (
     <main className="relative w-screen h-screen overflow-hidden text-white">
@@ -114,25 +114,19 @@ export default function MainPage() {
 
         <button
           onClick={handleSanjiMint}
-          disabled={sanjiMinting || hasMinted || cooldownActive}
-          className={`px-4 py-2 rounded disabled:opacity-50 ${
-            hasMinted || cooldownActive ? "bg-gray-600" : "bg-green-600 hover:bg-green-700"
-          }`}
+          disabled={isBaseDeckDisabled}
+          className="bg-green-600 px-4 py-2 rounded disabled:opacity-50"
         >
-          {sanjiMinting
-            ? "Minting..."
-            : hasMinted
-            ? "Already Minted Base Deck"
-            : "Mint Sanji 'n Frens Base Deck"}
+          {sanjiMinting ? "Minting..." : "Mint Sanji 'n Frens Base Deck"}
         </button>
 
-        {cooldownActive && (
-          <p className="text-yellow-400">
-            ⏳ Cooldown active. Try again in {Math.floor(timeLeft / 60)} minutes.
-          </p>
+        {sanjiStatus && <p>{sanjiStatus}</p>}
+
+        {cooldownBase && (
+          <p>⏳ Cooldown: {Math.floor(timeLeftBase / 60)} minutes left</p>
         )}
 
-        {sanjiStatus && <p>{sanjiStatus}</p>}
+        <p>Remaining Base Decks: {remainingBaseDecks}</p>
 
         {showStablecoin && (
           <div className="space-y-2">
@@ -154,8 +148,6 @@ export default function MainPage() {
             {tokenStatus && <p>{tokenStatus}</p>}
           </div>
         )}
-
-        <p className="text-sm">Remaining Base Decks: {baseRemaining}</p>
 
         <hr className="my-4" />
 
