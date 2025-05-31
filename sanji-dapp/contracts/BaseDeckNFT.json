@@ -3,37 +3,17 @@
   "abi": [
     {
       "inputs": [
-        {
-          "internalType": "address",
-          "name": "_sanji",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "_usdc",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "_usdt",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "_payout",
-          "type": "address"
-        }
+        { "internalType": "address", "name": "_sanji", "type": "address" },
+        { "internalType": "address", "name": "_usdc", "type": "address" },
+        { "internalType": "address", "name": "_usdt", "type": "address" },
+        { "internalType": "address", "name": "_payout", "type": "address" }
       ],
       "stateMutability": "nonpayable",
       "type": "constructor"
     },
     {
       "inputs": [
-        {
-          "internalType": "address",
-          "name": "paymentToken",
-          "type": "address"
-        }
+        { "internalType": "address", "name": "paymentToken", "type": "address" }
       ],
       "name": "mintBaseDeck",
       "outputs": [],
@@ -42,19 +22,64 @@
     },
     {
       "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
+        { "internalType": "uint256", "name": "tokenId", "type": "uint256" }
       ],
       "name": "tokenURI",
       "outputs": [
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        }
+        { "internalType": "string", "name": "", "type": "string" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalSupply",
+      "outputs": [
+        { "internalType": "uint256", "name": "", "type": "uint256" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}
+{
+  "contractName": "BaseDeckNFT",
+  "abi": [
+    {
+      "inputs": [
+        { "internalType": "address", "name": "_sanji", "type": "address" },
+        { "internalType": "address", "name": "_usdc", "type": "address" },
+        { "internalType": "address", "name": "_usdt", "type": "address" },
+        { "internalType": "address", "name": "_payout", "type": "address" }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        { "internalType": "address", "name": "paymentToken", "type": "address" }
+      ],
+      "name": "mintBaseDeck",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "tokenId", "type": "uint256" }
+      ],
+      "name": "tokenURI",
+      "outputs": [
+        { "internalType": "string", "name": "", "type": "string" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalSupply",
+      "outputs": [
+        { "internalType": "uint256", "name": "", "type": "uint256" }
       ],
       "stateMutability": "view",
       "type": "function"

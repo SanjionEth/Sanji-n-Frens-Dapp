@@ -1,24 +1,23 @@
 import Image from "next/image";
 import { useAccount, useWalletClient } from "wagmi";
-import { useState, useEffect } from "react";
-import { ethers } from "ethers";
+import { useState } from "react";
 import useSanjiMint from "../hooks/useSanjiMint";
 import useStablecoinMint from "../hooks/useStablecoinMint";
 import useSpecialCardMint from "../hooks/useSpecialCardMint";
-import BaseDeckABI from "../contracts/BaseDeckNFT.json";
+import { ethers } from "ethers";
 
 export default function MainPage() {
   const { isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
   const [showStablecoin, setShowStablecoin] = useState(false);
   const [selectedToken, setSelectedToken] = useState("USDT");
-  const [baseDeckRemaining, setBaseDeckRemaining] = useState("Loading...");
 
   const {
     mintWithSanji,
     minting: sanjiMinting,
     status: sanjiStatus,
-    hasMinted: baseHasMinted
+    hasMinted: sanjiHasMinted,
+    remaining: baseDeckRemaining
   } = useSanjiMint(walletClient);
 
   const {
@@ -42,28 +41,6 @@ export default function MainPage() {
     requiredSanji: ethers.parseUnits("10000000", 18),
     maxSupply: 100
   });
-
-  useEffect(() => {
-    const fetchRemaining = async () => {
-      if (!walletClient) return;
-
-      try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const contract = new ethers.Contract(
-          "0x781e27C583B88751eCf73cd28909706c12E3fCe1",
-          BaseDeckABI.abi,
-          provider
-        );
-        const current = await contract.currentTokenId();
-        setBaseDeckRemaining(`${10000 - Number(current)} / 10000`);
-      } catch (err) {
-        console.error("Error fetching base deck supply:", err);
-        setBaseDeckRemaining("Error");
-      }
-    };
-
-    fetchRemaining();
-  }, [walletClient]);
 
   const handleSanjiMint = async () => {
     try {
@@ -118,13 +95,18 @@ export default function MainPage() {
 
         <button
           onClick={handleSanjiMint}
-          disabled={sanjiMinting || baseHasMinted}
+          disabled={sanjiMinting || sanjiHasMinted}
           className="bg-green-600 px-4 py-2 rounded disabled:opacity-50"
         >
-          {sanjiMinting ? "Minting..." : "Mint Sanji 'n Frens Base Deck"}
+          {sanjiMinting
+            ? "Minting..."
+            : sanjiHasMinted
+            ? "✅ Already Minted Base Deck"
+            : "Mint Sanji 'n Frens Base Deck"}
         </button>
 
         {sanjiStatus && <p>{sanjiStatus}</p>}
+        <p>Remaining Base Decks: {baseDeckRemaining}</p>
 
         {showStablecoin && (
           <div className="space-y-2">
@@ -147,8 +129,6 @@ export default function MainPage() {
           </div>
         )}
 
-        <p>Remaining Base Decks: {baseDeckRemaining}</p>
-
         <hr className="my-4" />
 
         <button
@@ -160,6 +140,7 @@ export default function MainPage() {
         </button>
         <p>{whistle.status}</p>
         <p>Remaining: {whistle.remaining}</p>
+        {whistle.cooldownActive && <p>⏳ Cooldown: {Math.floor(whistle.timeLeft / 60)} mins left</p>}
 
         <button
           onClick={handleAltmanMint}
@@ -170,6 +151,7 @@ export default function MainPage() {
         </button>
         <p>{altman.status}</p>
         <p>Remaining: {altman.remaining}</p>
+        {altman.cooldownActive && <p>⏳ Cooldown: {Math.floor(altman.timeLeft / 60)} mins left</p>}
       </div>
     </main>
   );
