@@ -5,21 +5,20 @@ import { ethers } from "ethers";
 import useSanjiMint from "../hooks/useSanjiMint";
 import useStablecoinMint from "../hooks/useStablecoinMint";
 import useSpecialCardMint from "../hooks/useSpecialCardMint";
+import BaseDeckABI from "../contracts/BaseDeckNFT.json";
 
 export default function MainPage() {
   const { isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
   const [showStablecoin, setShowStablecoin] = useState(false);
   const [selectedToken, setSelectedToken] = useState("USDT");
-  const [remainingBaseDecks, setRemainingBaseDecks] = useState("Loading...");
+  const [baseDeckRemaining, setBaseDeckRemaining] = useState("Loading...");
 
   const {
     mintWithSanji,
     minting: sanjiMinting,
     status: sanjiStatus,
-    hasMinted: hasMintedBase,
-    cooldownActive: cooldownBase,
-    timeLeft: timeLeftBase
+    hasMinted: baseHasMinted
   } = useSanjiMint(walletClient);
 
   const {
@@ -45,20 +44,25 @@ export default function MainPage() {
   });
 
   useEffect(() => {
-    const fetchBaseDeckSupply = async () => {
+    const fetchRemaining = async () => {
       if (!walletClient) return;
+
       try {
-        const browserProvider = new ethers.BrowserProvider(window.ethereum);
-        const contract = new ethers.Contract("0x781e27C583B88751eCf73cd28909706c12E3fCe1", require("../contracts/BaseDeckNFT.json").abi, browserProvider);
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const contract = new ethers.Contract(
+          "0x781e27C583B88751eCf73cd28909706c12E3fCe1",
+          BaseDeckABI.abi,
+          provider
+        );
         const current = await contract.currentTokenId();
-        const max = 10000;
-        setRemainingBaseDecks(`${max - Number(current)} / ${max}`);
+        setBaseDeckRemaining(`${10000 - Number(current)} / 10000`);
       } catch (err) {
-        console.error("Base Deck supply fetch error:", err);
-        setRemainingBaseDecks("Error");
+        console.error("Error fetching base deck supply:", err);
+        setBaseDeckRemaining("Error");
       }
     };
-    fetchBaseDeckSupply();
+
+    fetchRemaining();
   }, [walletClient]);
 
   const handleSanjiMint = async () => {
@@ -84,6 +88,7 @@ export default function MainPage() {
       await whistle.mint();
     } catch (err) {
       console.error("Whistle mint error:", err);
+      whistle.status = "❌ You need at least 5,000,000 SANJI tokens to mint this.";
     }
   };
 
@@ -92,10 +97,9 @@ export default function MainPage() {
       await altman.mint();
     } catch (err) {
       console.error("Altman mint error:", err);
+      altman.status = "❌ You need at least 10,000,000 SANJI tokens to mint this.";
     }
   };
-
-  const isBaseDeckDisabled = sanjiMinting || hasMintedBase || cooldownBase;
 
   return (
     <main className="relative w-screen h-screen overflow-hidden text-white">
@@ -114,19 +118,13 @@ export default function MainPage() {
 
         <button
           onClick={handleSanjiMint}
-          disabled={isBaseDeckDisabled}
+          disabled={sanjiMinting || baseHasMinted}
           className="bg-green-600 px-4 py-2 rounded disabled:opacity-50"
         >
           {sanjiMinting ? "Minting..." : "Mint Sanji 'n Frens Base Deck"}
         </button>
 
         {sanjiStatus && <p>{sanjiStatus}</p>}
-
-        {cooldownBase && (
-          <p>⏳ Cooldown: {Math.floor(timeLeftBase / 60)} minutes left</p>
-        )}
-
-        <p>Remaining Base Decks: {remainingBaseDecks}</p>
 
         {showStablecoin && (
           <div className="space-y-2">
@@ -148,6 +146,8 @@ export default function MainPage() {
             {tokenStatus && <p>{tokenStatus}</p>}
           </div>
         )}
+
+        <p>Remaining Base Decks: {baseDeckRemaining}</p>
 
         <hr className="my-4" />
 
@@ -174,3 +174,4 @@ export default function MainPage() {
     </main>
   );
 }
+
