@@ -1,36 +1,47 @@
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
-import BaseDeck from "../contracts/BaseDeckNFT.json";
-import ERC20 from "../contracts/erc20.json";
+import BaseDeckABI from "../contracts/BaseDeckNFT.json";
+import ERC20ABI from "../contracts/erc20.json";
 
-const BASE_DECK_ADDRESS = "0x781e27C583B88751eCf73cd28909706c12E3fCe1";
+const BASE_DECK_ADDRESS = "0x717f8d41EC7d76F3bB921aC71E9D6B5cD546060A";
 const SANJI_ADDRESS = "0x8E0B3E3Cb4468B6aa07a64E69DEb72aeA8eddC6F";
 const SANJI_REQUIRED = ethers.parseUnits("1000000", 18);
+const COOLDOWN = 365 * 24 * 60 * 60; // 1 year cooldown
 
 export default function useSanjiMint(provider) {
   const [minting, setMinting] = useState(false);
   const [status, setStatus] = useState("");
+  const [cooldownActive, setCooldownActive] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(null);
   const [hasMinted, setHasMinted] = useState(false);
-  const [remaining, setRemaining] = useState("Loading...");
 
   useEffect(() => {
-    if (!provider) return;
+    if (!provider || typeof window === "undefined") return;
 
     (async () => {
       try {
         const browserProvider = new ethers.BrowserProvider(window.ethereum);
         const signer = await browserProvider.getSigner();
         const wallet = await signer.getAddress();
-        const contract = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeck.abi, signer);
+        const baseDeck = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeckABI.abi, browserProvider);
 
-        const alreadyMinted = await contract.hasMintedType(wallet, "Base Deck");
-        setHasMinted(alreadyMinted);
+        const minted = await baseDeck.hasMintedType(wallet, "Base Deck");
+        setHasMinted(minted);
 
-        const currentSupply = await contract.totalSupply();
-        setRemaining(`${10000 - Number(currentSupply)} / 10000`);
+        const last = await baseDeck.lastMintTime(wallet, "Base Deck");
+        const now = Math.floor(Date.now() / 1000);
+        const diff = now - Number(last);
+
+        if (diff < COOLDOWN) {
+          setCooldownActive(true);
+          setTimeLeft(COOLDOWN - diff);
+        } else {
+          setCooldownActive(false);
+          setTimeLeft(0);
+        }
       } catch (err) {
-        console.error("Error fetching mint status:", err);
-        setRemaining("Error");
+        console.error("Error fetching Base Deck status:", err);
+        setStatus("⚠️ Error checking mint status.");
       }
     })();
   }, [provider]);
@@ -44,7 +55,12 @@ export default function useSanjiMint(provider) {
       const signer = await browserProvider.getSigner();
       const wallet = await signer.getAddress();
 
-      const sanji = new ethers.Contract(SANJI_ADDRESS, ERC20.abi, browserProvider);
+      if (cooldownActive || hasMinted) {
+        setStatus("❌ You have already minted or are in cooldown.");
+        return false;
+      }
+
+      const sanji = new ethers.Contract(SANJI_ADDRESS, ERC20ABI.abi, signer);
       const balance = await sanji.balanceOf(wallet);
 
       if (balance < SANJI_REQUIRED) {
@@ -52,26 +68,30 @@ export default function useSanjiMint(provider) {
         return false;
       }
 
-      const baseDeck = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeck.abi, signer);
-      const tx = await baseDeck.mintBaseDeck(ethers.ZeroAddress); // Signal free mint
+      const baseDeck = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeckABI.abi, signer);
+      const tx = await baseDeck.mintBaseDeck(ethers.ZeroAddress);
       await tx.wait();
 
       setStatus("✅ Base Deck minted for free using SANJI!");
       setHasMinted(true);
-
-      const currentSupply = await baseDeck.totalSupply();
-      setRemaining(`${10000 - Number(currentSupply)} / 10000`);
-
+      setCooldownActive(true);
+      setTimeLeft(COOLDOWN);
       return true;
     } catch (err) {
       console.error("SANJI mint failed:", err);
-      setStatus(`❌ SANJI mint failed: ${err?.message || "Unknown error"}`);
+      setStatus(`❌ SANJI mint failed: ${err.message}`);
       return false;
     } finally {
       setMinting(false);
     }
   };
 
-  return { mintWithSanji, minting, status, hasMinted, remaining };
+  return {
+    mintWithSanji,
+    minting,
+    status,
+    cooldownActive,
+    timeLeft,
+    hasMinted
+  };
 }
-
