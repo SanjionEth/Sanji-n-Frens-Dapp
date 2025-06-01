@@ -87,12 +87,10 @@ export default function useStablecoinMint(provider) {
   };
 
   return {
-    mintWithToken,
-    minting,
-    status,
-    cooldownActive,
-    timeLeft,
-    hasMinted,
-    remaining
-  };
-}
+  mintWithToken,
+  minting,
+  status,
+  cooldownActive,
+  timeLeft,
+  hasMinted
+};
