@@ -1,13 +1,13 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import BaseDeckABI from "../contracts/BaseDeckNFT.json";
 import ERC20ABI from "../contracts/erc20.json";
 
-const BASE_DECK_ADDRESS = "0x717f8d41EC7d76F3bB921aC71E9D6B5cD546060A";
+const BASE_DECK_ADDRESS = "0xYOUR_BASE_DECK_ADDRESS_HERE"; // Replace with actual
 const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 const USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
-const MINT_PRICE = ethers.parseUnits("25", 6); // $25 with 6 decimals
-const COOLDOWN = 365 * 24 * 60 * 60; // 1 year
+const MINT_PRICE = ethers.parseUnits("25", 6);
+const COOLDOWN = 365 * 24 * 60 * 60;
 
 export default function useStablecoinMint(provider) {
   const [minting, setMinting] = useState(false);
@@ -17,21 +17,21 @@ export default function useStablecoinMint(provider) {
   const [hasMinted, setHasMinted] = useState(false);
 
   useEffect(() => {
-    if (!provider || typeof window === "undefined") return;
+    if (!provider) return;
 
     (async () => {
       try {
         const browserProvider = new ethers.BrowserProvider(window.ethereum);
         const signer = await browserProvider.getSigner();
         const wallet = await signer.getAddress();
-        const baseDeck = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeckABI.abi, browserProvider);
 
-        const minted = await baseDeck.hasMintedType(wallet, "Base Deck");
-        setHasMinted(minted);
-
-        const last = await baseDeck.lastMintTime(wallet, "Base Deck");
+        const baseDeck = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeckABI.abi, signer);
+        const hasMinted = await baseDeck.hasMintedType(wallet, "Base Deck");
+        const lastMintTime = await baseDeck.lastMintTime(wallet, "Base Deck");
         const now = Math.floor(Date.now() / 1000);
-        const diff = now - Number(last);
+        const diff = now - Number(lastMintTime);
+
+        setHasMinted(hasMinted);
 
         if (diff < COOLDOWN) {
           setCooldownActive(true);
@@ -42,7 +42,7 @@ export default function useStablecoinMint(provider) {
         }
       } catch (err) {
         console.error("Stablecoin mint status error:", err);
-        setStatus("⚠️ Error checking mint status.");
+        setStatus("❌ Error checking mint status.");
       }
     })();
   }, [provider]);
@@ -55,11 +55,6 @@ export default function useStablecoinMint(provider) {
       const browserProvider = new ethers.BrowserProvider(window.ethereum);
       const signer = await browserProvider.getSigner();
       const wallet = await signer.getAddress();
-
-      if (cooldownActive || hasMinted) {
-        setStatus("❌ You have already minted or are in cooldown.");
-        return;
-      }
 
       const tokenAddress = selectedToken === "USDT" ? USDT_ADDRESS : USDC_ADDRESS;
       const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI.abi, signer);
@@ -82,7 +77,7 @@ export default function useStablecoinMint(provider) {
       setTimeLeft(COOLDOWN);
     } catch (err) {
       console.error("Minting failed:", err);
-      setStatus(`❌ Minting failed: ${err?.message || "Unknown error"}`);
+      setStatus("❌ Minting failed: " + (err?.message || "Unknown error"));
     } finally {
       setMinting(false);
     }
