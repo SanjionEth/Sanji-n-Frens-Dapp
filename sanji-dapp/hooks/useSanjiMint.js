@@ -15,8 +15,10 @@ export default function useSanjiMint(provider) {
   const [timeLeft, setTimeLeft] = useState(null);
   const [hasMinted, setHasMinted] = useState(false);
 
+  // Fetch mint status and cooldown on load
   useEffect(() => {
     if (!provider) return;
+
     (async () => {
       try {
         const browserProvider = new ethers.BrowserProvider(window.ethereum);
@@ -25,10 +27,11 @@ export default function useSanjiMint(provider) {
         const contract = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeck.abi, signer);
 
         const last = await contract.lastMintTime(wallet, "Base Deck");
+        const hasMintedVal = await contract.hasMintedType(wallet, "Base Deck");
+
         const now = Math.floor(Date.now() / 1000);
         const diff = now - Number(last);
 
-        const hasMintedVal = await contract.hasMintedType(wallet, "Base Deck");
         setHasMinted(hasMintedVal);
 
         if (diff < COOLDOWN) {
@@ -40,10 +43,12 @@ export default function useSanjiMint(provider) {
         }
       } catch (err) {
         console.error("Cooldown check error:", err);
+        setStatus("❌ Error checking mint eligibility.");
       }
     })();
   }, [provider]);
 
+  // Trigger mint
   const mintWithSanji = async () => {
     try {
       setMinting(true);
@@ -56,25 +61,36 @@ export default function useSanjiMint(provider) {
       const sanji = new ethers.Contract(SANJI_ADDRESS, ERC20.abi, browserProvider);
       const balance = await sanji.balanceOf(wallet);
 
-      if (balance < SANJI_REQUIRED) {
+      if (BigInt(balance.toString()) < BigInt(SANJI_REQUIRED.toString())) {
         setStatus("❌ You need at least 1,000,000 SANJI tokens to mint for free.");
         return false;
       }
 
       const baseDeck = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeck.abi, signer);
+      setStatus("Minting Base Deck...");
       const tx = await baseDeck.mintBaseDeck(ethers.ZeroAddress);
       await tx.wait();
 
       setStatus("✅ Base Deck minted for free using SANJI!");
+      setHasMinted(true);
+      setCooldownActive(true);
+      setTimeLeft(COOLDOWN);
       return true;
     } catch (err) {
       console.error("SANJI mint failed:", err);
-      setStatus(`❌ SANJI mint failed: ${err.message}`);
+      setStatus(`❌ SANJI mint failed: ${err?.reason || err?.message || "Unknown error"}`);
       return false;
     } finally {
       setMinting(false);
     }
   };
 
-  return { mintWithSanji, minting, status, cooldownActive, timeLeft, hasMinted };
+  return {
+    mintWithSanji,
+    minting,
+    status,
+    cooldownActive,
+    timeLeft,
+    hasMinted
+  };
 }

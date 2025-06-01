@@ -18,16 +18,16 @@ export default function MainPage() {
     status: sanjiStatus,
     cooldownActive: sanjiCooldown,
     timeLeft: sanjiTimeLeft,
-    hasMinted: sanjiHasMinted
+    hasMinted: hasSanjiMinted
   } = useSanjiMint(walletClient);
 
   const {
     mintWithToken,
     minting: tokenMinting,
     status: tokenStatus,
-    cooldownActive: tokenCooldown,
-    timeLeft: tokenTimeLeft,
-    hasMinted: tokenHasMinted
+    cooldownActive: stablecoinCooldown,
+    timeLeft: stablecoinTimeLeft,
+    hasMinted: hasStablecoinMinted
   } = useStablecoinMint(walletClient);
 
   const whistle = useSpecialCardMint({
@@ -99,13 +99,17 @@ export default function MainPage() {
 
         <button
           onClick={handleSanjiMint}
-          disabled={sanjiMinting || sanjiCooldown || sanjiHasMinted}
+          disabled={sanjiMinting || hasSanjiMinted || sanjiCooldown}
           className="bg-green-600 px-4 py-2 rounded disabled:opacity-50"
         >
           {sanjiMinting ? "Minting..." : "Mint Sanji 'n Frens Base Deck"}
         </button>
         <p>{sanjiStatus}</p>
-        {sanjiCooldown && sanjiTimeLeft !== null && <p>Cooldown: {Math.ceil(sanjiTimeLeft / 86400)} days</p>}
+        {(hasSanjiMinted || sanjiCooldown) && (
+          <p>
+            ⏳ Cooldown: {sanjiTimeLeft ? `${Math.ceil(sanjiTimeLeft / 86400)} days remaining` : "Checking..."}
+          </p>
+        )}
 
         {showStablecoin && (
           <div className="space-y-2">
@@ -119,13 +123,17 @@ export default function MainPage() {
             </select>
             <button
               onClick={handleStablecoinMint}
-              disabled={tokenMinting || tokenCooldown || tokenHasMinted}
+              disabled={tokenMinting || hasStablecoinMinted || stablecoinCooldown}
               className="bg-blue-600 px-4 py-2 rounded disabled:opacity-50"
             >
               {tokenMinting ? "Minting..." : `Mint with ${selectedToken}`}
             </button>
             <p>{tokenStatus}</p>
-            {tokenCooldown && tokenTimeLeft !== null && <p>Cooldown: {Math.ceil(tokenTimeLeft / 86400)} days</p>}
+            {(hasStablecoinMinted || stablecoinCooldown) && (
+              <p>
+                ⏳ Cooldown: {stablecoinTimeLeft ? `${Math.ceil(stablecoinTimeLeft / 86400)} days remaining` : "Checking..."}
+              </p>
+            )}
           </div>
         )}
 
@@ -140,7 +148,7 @@ export default function MainPage() {
         </button>
         <p>{whistle.status}</p>
         <p>Remaining: {whistle.remaining}</p>
-        {whistle.cooldownActive && whistle.timeLeft !== null && <p>Cooldown: {Math.ceil(whistle.timeLeft / 86400)} days</p>}
+        {whistle.cooldownActive && <p>⏳ Cooldown: {Math.ceil(whistle.timeLeft / 86400)} days remaining</p>}
 
         <button
           onClick={handleAltmanMint}
@@ -151,7 +159,7 @@ export default function MainPage() {
         </button>
         <p>{altman.status}</p>
         <p>Remaining: {altman.remaining}</p>
-        {altman.cooldownActive && altman.timeLeft !== null && <p>Cooldown: {Math.ceil(altman.timeLeft / 86400)} days</p>}
+        {altman.cooldownActive && <p>⏳ Cooldown: {Math.ceil(altman.timeLeft / 86400)} days remaining</p>}
       </div>
     </main>
   );
