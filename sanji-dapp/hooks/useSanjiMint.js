@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import BaseDeck from "../contracts/BaseDeckNFT.json";
 import ERC20 from "../contracts/erc20.json";
 
-const BASE_DECK_ADDRESS = "0xab3B02FCD28e1CfE80Cde2986050E9f6D898d18f";
+const BASE_DECK_ADDRESS = "0x169d50acDfDe126776e969963343523e2d543283";
 const SANJI_ADDRESS = "0x8E0B3E3Cb4468B6aa07a64E69DEb72aeA8eddC6F";
 const SANJI_REQUIRED = ethers.parseUnits("1000000", 18);
 const COOLDOWN = 365 * 24 * 60 * 60;
