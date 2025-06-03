@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import BaseDeck from "../contracts/BaseDeckNFT.json";
 import ERC20 from "../contracts/erc20.json";
 
-const BASE_DECK_ADDRESS = "0x717f8d41EC7d76F3bB921aC71E9D6B5cD546060A";
+const BASE_DECK_ADDRESS = "0x169d50acDfDe126776e969963343523e2d543283";
 const SANJI_ADDRESS = "0x8E0B3E3Cb4468B6aa07a64E69DEb72aeA8eddC6F";
 const SANJI_REQUIRED = ethers.parseUnits("1000000", 18);
 const COOLDOWN = 365 * 24 * 60 * 60;
@@ -26,18 +26,12 @@ export default function useSanjiMint(provider) {
         const wallet = await signer.getAddress();
         const contract = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeck.abi, signer);
 
-        const [last, minted, max] = await Promise.all([
-          contract.lastMintTime(wallet, "Base Deck"),
-          contract.totalSupply(),
-          contract.maxSupply()
-        ]);
+        const last = await contract.lastMintTime(wallet, "Base Deck");
+        const now = Math.floor(Date.now() / 1000);
+        const diff = now - Number(last);
 
         const hasMintedVal = await contract.hasMintedType(wallet, "Base Deck");
         setHasMinted(hasMintedVal);
-        setRemaining(`${max - minted} / ${max}`);
-
-        const now = Math.floor(Date.now() / 1000);
-        const diff = now - Number(last);
 
         if (diff < COOLDOWN) {
           setCooldownActive(true);
@@ -46,8 +40,11 @@ export default function useSanjiMint(provider) {
           setCooldownActive(false);
           setTimeLeft(0);
         }
+
+        const current = await contract.totalSupply();
+        setRemaining(`${10000 - Number(current)} / 10000`);
       } catch (err) {
-        console.error("SANJI status error:", err);
+        console.error("Cooldown or remaining check error:", err);
         setRemaining("Error");
       }
     })();
@@ -78,10 +75,14 @@ export default function useSanjiMint(provider) {
       setHasMinted(true);
       setCooldownActive(true);
       setTimeLeft(COOLDOWN);
+
+      const current = await baseDeck.totalSupply();
+      setRemaining(`${10000 - Number(current)} / 10000`);
+
       return true;
     } catch (err) {
       console.error("SANJI mint failed:", err);
-      setStatus(`❌ SANJI mint failed: ${err?.message || "Unknown error"}`);
+      setStatus(`❌ SANJI mint failed: ${err.message}`);
       return false;
     } finally {
       setMinting(false);

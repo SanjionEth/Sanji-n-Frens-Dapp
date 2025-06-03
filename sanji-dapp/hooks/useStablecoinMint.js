@@ -3,11 +3,12 @@ import { ethers } from "ethers";
 import BaseDeckABI from "../contracts/BaseDeckNFT.json";
 import ERC20ABI from "../contracts/erc20.json";
 
-const BASE_DECK_ADDRESS = "0x717f8d41EC7d76F3bB921aC71E9D6B5cD546060A";
+const BASE_DECK_ADDRESS = "0x169d50acDfDe126776e969963343523e2d543283";
 const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 const USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
 const MINT_PRICE = ethers.parseUnits("25", 6);
 const COOLDOWN = 365 * 24 * 60 * 60;
+const MAX_SUPPLY = 10000;
 
 export default function useStablecoinMint(provider) {
   const [minting, setMinting] = useState(false);
@@ -25,20 +26,15 @@ export default function useStablecoinMint(provider) {
         const browserProvider = new ethers.BrowserProvider(window.ethereum);
         const signer = await browserProvider.getSigner();
         const wallet = await signer.getAddress();
-        const contract = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeckABI.abi, signer);
 
-        const [minted, max] = await Promise.all([
-          contract.totalSupply(),
-          contract.maxSupply()
-        ]);
-        setRemaining(`${max - minted} / ${max}`);
+        const baseDeck = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeckABI.abi, signer);
 
-        const hasMintedVal = await contract.hasMintedType(wallet, "Base Deck");
+        const hasMintedVal = await baseDeck.hasMintedType(wallet, "Base Deck");
         setHasMinted(hasMintedVal);
 
-        const last = await contract.lastMintTime(wallet, "Base Deck");
+        const lastMintTime = await baseDeck.lastMintTime(wallet, "Base Deck");
         const now = Math.floor(Date.now() / 1000);
-        const diff = now - Number(last);
+        const diff = now - Number(lastMintTime);
 
         if (diff < COOLDOWN) {
           setCooldownActive(true);
@@ -47,8 +43,11 @@ export default function useStablecoinMint(provider) {
           setCooldownActive(false);
           setTimeLeft(0);
         }
+
+        const currentSupply = await baseDeck.totalSupply();
+        setRemaining(`${MAX_SUPPLY - Number(currentSupply)} / ${MAX_SUPPLY}`);
       } catch (err) {
-        console.error("Stablecoin status error:", err);
+        console.error("Stablecoin mint status error:", err);
         setStatus("❌ Error checking mint status.");
         setRemaining("Error");
       }
@@ -79,10 +78,13 @@ export default function useStablecoinMint(provider) {
       const mintTx = await baseDeckContract.mintBaseDeck(tokenAddress);
       await mintTx.wait();
 
-      setStatus(`✅ Base Deck minted with ${selectedToken}!`);
+      setStatus(`✅ Base Deck minted with ${selectedToken}!\`);
       setHasMinted(true);
       setCooldownActive(true);
       setTimeLeft(COOLDOWN);
+
+      const updatedSupply = await baseDeckContract.totalSupply();
+      setRemaining(`${MAX_SUPPLY - Number(updatedSupply)} / ${MAX_SUPPLY}`);
     } catch (err) {
       console.error("Minting failed:", err);
       setStatus("❌ Minting failed: " + (err?.message || "Unknown error"));
