@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import BaseDeckABI from "../contracts/BaseDeckNFT.json";
 import ERC20ABI from "../contracts/erc20.json";
 
-const BASE_DECK_ADDRESS = "0x169d50acDfDe126776e969963343523e2d543283";
+const BASE_DECK_ADDRESS = "0x717f8d41EC7d76F3bB921aC71E9D6B5cD546060A";
 const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 const USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
 const MINT_PRICE = ethers.parseUnits("25", 6);
@@ -25,17 +25,20 @@ export default function useStablecoinMint(provider) {
         const browserProvider = new ethers.BrowserProvider(window.ethereum);
         const signer = await browserProvider.getSigner();
         const wallet = await signer.getAddress();
+        const contract = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeckABI.abi, signer);
 
-        const baseDeck = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeckABI.abi, signer);
-        const hasMintedVal = await baseDeck.hasMintedType(wallet, "Base Deck");
-        const last = await baseDeck.lastMintTime(wallet, "Base Deck");
-        const total = await baseDeck.totalSupply();
+        const [minted, max] = await Promise.all([
+          contract.totalSupply(),
+          contract.maxSupply()
+        ]);
+        setRemaining(`${max - minted} / ${max}`);
 
+        const hasMintedVal = await contract.hasMintedType(wallet, "Base Deck");
+        setHasMinted(hasMintedVal);
+
+        const last = await contract.lastMintTime(wallet, "Base Deck");
         const now = Math.floor(Date.now() / 1000);
         const diff = now - Number(last);
-
-        setHasMinted(hasMintedVal);
-        setRemaining(`${10000 - Number(total)} / 10000`);
 
         if (diff < COOLDOWN) {
           setCooldownActive(true);
@@ -45,7 +48,7 @@ export default function useStablecoinMint(provider) {
           setTimeLeft(0);
         }
       } catch (err) {
-        console.error("Stablecoin mint status error:", err);
+        console.error("Stablecoin status error:", err);
         setStatus("❌ Error checking mint status.");
         setRemaining("Error");
       }

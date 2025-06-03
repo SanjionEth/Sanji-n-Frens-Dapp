@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import BaseDeck from "../contracts/BaseDeckNFT.json";
 import ERC20 from "../contracts/erc20.json";
 
-const BASE_DECK_ADDRESS = "0x169d50acDfDe126776e969963343523e2d543283";
+const BASE_DECK_ADDRESS = "0x717f8d41EC7d76F3bB921aC71E9D6B5cD546060A";
 const SANJI_ADDRESS = "0x8E0B3E3Cb4468B6aa07a64E69DEb72aeA8eddC6F";
 const SANJI_REQUIRED = ethers.parseUnits("1000000", 18);
 const COOLDOWN = 365 * 24 * 60 * 60;
@@ -14,8 +14,8 @@ export default function useSanjiMint(provider) {
   const [cooldownActive, setCooldownActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(null);
   const [hasMinted, setHasMinted] = useState(false);
+  const [remaining, setRemaining] = useState("Loading...");
 
-  // Fetch mint status and cooldown on load
   useEffect(() => {
     if (!provider) return;
 
@@ -26,13 +26,18 @@ export default function useSanjiMint(provider) {
         const wallet = await signer.getAddress();
         const contract = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeck.abi, signer);
 
-        const last = await contract.lastMintTime(wallet, "Base Deck");
+        const [last, minted, max] = await Promise.all([
+          contract.lastMintTime(wallet, "Base Deck"),
+          contract.totalSupply(),
+          contract.maxSupply()
+        ]);
+
         const hasMintedVal = await contract.hasMintedType(wallet, "Base Deck");
+        setHasMinted(hasMintedVal);
+        setRemaining(`${max - minted} / ${max}`);
 
         const now = Math.floor(Date.now() / 1000);
         const diff = now - Number(last);
-
-        setHasMinted(hasMintedVal);
 
         if (diff < COOLDOWN) {
           setCooldownActive(true);
@@ -42,13 +47,12 @@ export default function useSanjiMint(provider) {
           setTimeLeft(0);
         }
       } catch (err) {
-        console.error("Cooldown check error:", err);
-        setStatus("❌ Error checking mint eligibility.");
+        console.error("SANJI status error:", err);
+        setRemaining("Error");
       }
     })();
   }, [provider]);
 
-  // Trigger mint
   const mintWithSanji = async () => {
     try {
       setMinting(true);
@@ -61,13 +65,12 @@ export default function useSanjiMint(provider) {
       const sanji = new ethers.Contract(SANJI_ADDRESS, ERC20.abi, browserProvider);
       const balance = await sanji.balanceOf(wallet);
 
-      if (BigInt(balance.toString()) < BigInt(SANJI_REQUIRED.toString())) {
+      if (balance < SANJI_REQUIRED) {
         setStatus("❌ You need at least 1,000,000 SANJI tokens to mint for free.");
         return false;
       }
 
       const baseDeck = new ethers.Contract(BASE_DECK_ADDRESS, BaseDeck.abi, signer);
-      setStatus("Minting Base Deck...");
       const tx = await baseDeck.mintBaseDeck(ethers.ZeroAddress);
       await tx.wait();
 
@@ -78,7 +81,7 @@ export default function useSanjiMint(provider) {
       return true;
     } catch (err) {
       console.error("SANJI mint failed:", err);
-      setStatus(`❌ SANJI mint failed: ${err?.reason || err?.message || "Unknown error"}`);
+      setStatus(`❌ SANJI mint failed: ${err?.message || "Unknown error"}`);
       return false;
     } finally {
       setMinting(false);
@@ -91,6 +94,7 @@ export default function useSanjiMint(provider) {
     status,
     cooldownActive,
     timeLeft,
-    hasMinted
+    hasMinted,
+    remaining
   };
 }

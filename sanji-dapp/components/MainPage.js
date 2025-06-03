@@ -18,16 +18,18 @@ export default function MainPage() {
     status: sanjiStatus,
     cooldownActive: sanjiCooldown,
     timeLeft: sanjiTimeLeft,
-    hasMinted: hasSanjiMinted
+    hasMinted: sanjiHasMinted,
+    remaining: sanjiRemaining
   } = useSanjiMint(walletClient);
 
   const {
     mintWithToken,
     minting: tokenMinting,
     status: tokenStatus,
-    cooldownActive: stablecoinCooldown,
-    timeLeft: stablecoinTimeLeft,
-    hasMinted: hasStablecoinMinted
+    cooldownActive: tokenCooldown,
+    timeLeft: tokenTimeLeft,
+    hasMinted: tokenHasMinted,
+    remaining: tokenRemaining
   } = useStablecoinMint(walletClient);
 
   const whistle = useSpecialCardMint({
@@ -69,7 +71,6 @@ export default function MainPage() {
       await whistle.mint();
     } catch (err) {
       console.error("Whistle mint error:", err);
-      whistle.status = "❌ You need at least 5,000,000 SANJI tokens to mint this.";
     }
   };
 
@@ -78,7 +79,6 @@ export default function MainPage() {
       await altman.mint();
     } catch (err) {
       console.error("Altman mint error:", err);
-      altman.status = "❌ You need at least 10,000,000 SANJI tokens to mint this.";
     }
   };
 
@@ -99,17 +99,14 @@ export default function MainPage() {
 
         <button
           onClick={handleSanjiMint}
-          disabled={sanjiMinting || hasSanjiMinted || sanjiCooldown}
+          disabled={sanjiMinting || sanjiCooldown || sanjiHasMinted}
           className="bg-green-600 px-4 py-2 rounded disabled:opacity-50"
         >
           {sanjiMinting ? "Minting..." : "Mint Sanji 'n Frens Base Deck"}
         </button>
         <p>{sanjiStatus}</p>
-        {(hasSanjiMinted || sanjiCooldown) && (
-          <p>
-            ⏳ Cooldown: {sanjiTimeLeft ? `${Math.ceil(sanjiTimeLeft / 86400)} days remaining` : "Checking..."}
-          </p>
-        )}
+        <p>Remaining Base Decks: {sanjiRemaining}</p>
+        {sanjiCooldown && sanjiTimeLeft && <p>Cooldown: {Math.ceil(sanjiTimeLeft / 86400)} days left</p>}
 
         {showStablecoin && (
           <div className="space-y-2">
@@ -123,17 +120,14 @@ export default function MainPage() {
             </select>
             <button
               onClick={handleStablecoinMint}
-              disabled={tokenMinting || hasStablecoinMinted || stablecoinCooldown}
+              disabled={tokenMinting || tokenCooldown || tokenHasMinted}
               className="bg-blue-600 px-4 py-2 rounded disabled:opacity-50"
             >
               {tokenMinting ? "Minting..." : `Mint with ${selectedToken}`}
             </button>
             <p>{tokenStatus}</p>
-            {(hasStablecoinMinted || stablecoinCooldown) && (
-              <p>
-                ⏳ Cooldown: {stablecoinTimeLeft ? `${Math.ceil(stablecoinTimeLeft / 86400)} days remaining` : "Checking..."}
-              </p>
-            )}
+            <p>Remaining Base Decks: {tokenRemaining}</p>
+            {tokenCooldown && tokenTimeLeft && <p>Cooldown: {Math.ceil(tokenTimeLeft / 86400)} days left</p>}
           </div>
         )}
 
@@ -148,7 +142,7 @@ export default function MainPage() {
         </button>
         <p>{whistle.status}</p>
         <p>Remaining: {whistle.remaining}</p>
-        {whistle.cooldownActive && <p>⏳ Cooldown: {Math.ceil(whistle.timeLeft / 86400)} days remaining</p>}
+        {whistle.cooldownActive && <p>Cooldown: {Math.ceil(whistle.timeLeft / 86400)} days left</p>}
 
         <button
           onClick={handleAltmanMint}
@@ -159,8 +153,9 @@ export default function MainPage() {
         </button>
         <p>{altman.status}</p>
         <p>Remaining: {altman.remaining}</p>
-        {altman.cooldownActive && <p>⏳ Cooldown: {Math.ceil(altman.timeLeft / 86400)} days remaining</p>}
+        {altman.cooldownActive && <p>Cooldown: {Math.ceil(altman.timeLeft / 86400)} days left</p>}
       </div>
     </main>
   );
 }
+
