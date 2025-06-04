@@ -78,7 +78,7 @@ export default function useStablecoinMint(provider) {
       const mintTx = await baseDeckContract.mintBaseDeck(tokenAddress);
       await mintTx.wait();
 
-      setStatus(`✅ Base Deck minted with ${selectedToken}!\`);
+      setStatus(`✅ Base Deck minted with ${selectedToken}!`);
       setHasMinted(true);
       setCooldownActive(true);
       setTimeLeft(COOLDOWN);
