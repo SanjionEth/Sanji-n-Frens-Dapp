@@ -1,7 +1,7 @@
 {
   "name": "Sanji 'n Frens Base Deck",
   "description": "This Base Deck NFT grants access to the Sanji 'n Frens card game. Each deck contains unique meme-powered cards starring Sanji, the OpenAI dog, and his frens.",
-  "image": "ipfs://bafybeiaodrdwl5wufsxlinubp7vxxmvmlnt3vceyf6kcmsapdcx66ctzre/",
+  "image": "https://ipfs.io/ipfs/bafybeiaodrdwl5wufsxlinubp7vxxmvmlnt3vceyf6kcmsapdcx66ctzre/",
   "attributes": [
     {
       "trait_type": "Collection",
