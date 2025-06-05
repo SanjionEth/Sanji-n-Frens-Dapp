@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import BaseDeckABI from "../contracts/BaseDeckNFT.json";
 import ERC20ABI from "../contracts/erc20.json";
 
-const BASE_DECK_ADDRESS = "0xe55272A5C5B27702Fcae8A460Fcf23E71152bCd8";
+const BASE_DECK_ADDRESS = "0x6383d2CB2a9e17a95548917805104A181ac58E3D";
 const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 const USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
 const MINT_PRICE = ethers.parseUnits("25", 6);
