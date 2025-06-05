@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import { useEffect, useState } from "react";
 import BaseDeckABI from "../contracts/BaseDeckNFT.json";
 
-const BASE_DECK_ADDRESS = "0x169d50acDfDe126776e969963343523e2d543283";
+const BASE_DECK_ADDRESS = "0x47E234c7dA8b75bB38ef57102a158F6B8F955B45";
 
 export default function useMintStatus(walletClient) {
   const [cooldownActive, setCooldownActive] = useState(false);
