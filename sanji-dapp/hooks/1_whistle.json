@@ -1,0 +1,10 @@
+{
+  "name": "Sanji's Tactical Whistle",
+  "description": "A rare silver card for master strategists. Requires 5,000,000+ SANJI to mint.",
+  "image": "https://ipfs.io/ipfs/bafybeias2jr2b5e35qdl56hvzsor643uljc3cndes3pjlfxncxska7hhxa/",
+  "attributes": [
+    { "trait_type": "Rarity", "value": "Silver" },
+    { "trait_type": "SANJI Required", "value": "5,000,000+" },
+    { "trait_type": "Edition", "value": "Special" }
+  ]
+}

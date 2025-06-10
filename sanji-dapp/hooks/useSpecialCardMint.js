@@ -4,7 +4,7 @@ import SpecialCardABI from "../contracts/SpecialCardNFT.json";
 import ERC20ABI from "../contracts/erc20.json";
 
 const SANJI_ADDRESS = "0x8E0B3E3Cb4468B6aa07a64E69DEb72aeA8eddC6F";
-const COOLDOWN = 365 * 24 * 60 * 60; // ⏳ 1 year in seconds
+const COOLDOWN = 365 * 24 * 60 * 60;
 
 export default function useSpecialCardMint({
   provider,
@@ -34,7 +34,7 @@ export default function useSpecialCardMint({
         const now = Math.floor(Date.now() / 1000);
         const diff = now - Number(last);
 
-        const minted = await contract.hasMinted(wallet);
+        const minted = await contract.hasMintedType(wallet, cardType);
         setHasMinted(minted);
 
         if (diff < COOLDOWN) {
@@ -45,7 +45,7 @@ export default function useSpecialCardMint({
           setTimeLeft(0);
         }
 
-        const current = await contract.currentSupply();
+        const current = await contract.cardSupply(cardType);
         setSupply(Number(current));
       } catch (err) {
         console.error("SpecialCard status error:", err);
@@ -73,7 +73,7 @@ export default function useSpecialCardMint({
 
       setStatus("Minting...");
       const contract = new ethers.Contract(contractAddress, SpecialCardABI.abi, signer);
-      const tx = await contract.mintSpecialCard(wallet);
+      const tx = await contract.mintSpecialCard(cardType);
       await tx.wait();
 
       setStatus("✅ Minted!");
