@@ -34,7 +34,7 @@ export default function MainPage() {
 
   const whistle = useSpecialCardMint({
     provider: walletClient,
-    contractAddress: "0x1A7475d874E07860a5b4E4a026FFb49D0614AD87",
+    contractAddress: "0xaea80Dce0b8Fa39DbB27aDe30Ec0e7164ce8c5E5",
     cardType: "Sanji's Tactical Whistle",
     requiredSanji: ethers.parseUnits("5000000", 18),
     maxSupply: 200

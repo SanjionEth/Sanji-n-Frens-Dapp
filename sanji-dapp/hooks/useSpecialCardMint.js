@@ -4,7 +4,7 @@ import SpecialCardABI from "../contracts/SpecialCardNFT.json";
 import ERC20ABI from "../contracts/erc20.json";
 
 const SANJI_ADDRESS = "0x8E0B3E3Cb4468B6aa07a64E69DEb72aeA8eddC6F";
-const COOLDOWN = 365 * 24 * 60 * 60;
+const COOLDOWN = 365 * 24 * 60 * 60; // ⏳ 1 year in seconds
 
 export default function useSpecialCardMint({
   provider,
