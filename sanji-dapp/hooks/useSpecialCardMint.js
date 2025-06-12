@@ -98,3 +98,4 @@ export default function useSpecialCardMint({
     remaining: supply !== null ? `${maxSupply - supply} / ${maxSupply}` : "Loading..."
   };
 }
+
