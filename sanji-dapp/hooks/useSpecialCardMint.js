@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import SpecialCardABI from "../contracts/SpecialCardNFT.json";
 import ERC20ABI from "../contracts/erc20.json";
+import { getCardTypeId } from "../utils/getCardTypeId"; // Ensure this exists
 
 const SANJI_ADDRESS = "0x8E0B3E3Cb4468B6aa07a64E69DEb72aeA8eddC6F";
 const COOLDOWN = 365 * 24 * 60 * 60; // 1 year in seconds
@@ -9,7 +10,7 @@ const COOLDOWN = 365 * 24 * 60 * 60; // 1 year in seconds
 export default function useSpecialCardMint({
   provider,
   contractAddress,
-  cardType,
+  cardName,
   requiredSanji,
   maxSupply
 }) {
@@ -19,16 +20,24 @@ export default function useSpecialCardMint({
   const [timeLeft, setTimeLeft] = useState(null);
   const [hasMinted, setHasMinted] = useState(false);
   const [supply, setSupply] = useState(null);
-
-  // Utility: Validates cardType before use
-  const isValidCardType = (value) =>
-    typeof value === "number" && Number.isInteger(value) && value >= 0;
+  const [cardTypeId, setCardTypeId] = useState(null);
 
   useEffect(() => {
-    if (!provider || !isValidCardType(cardType)) {
-      console.warn("❌ useSpecialCardMint: Invalid cardType:", cardType);
-      return;
+    try {
+      const id = getCardTypeId(cardName);
+      if (typeof id === "number" && id >= 0) {
+        setCardTypeId(id);
+      } else {
+        throw new Error("Invalid card type ID");
+      }
+    } catch (err) {
+      console.error("❌ Card type mapping error:", err.message);
+      setStatus(`❌ Could not resolve card type for "${cardName}"`);
     }
+  }, [cardName]);
+
+  useEffect(() => {
+    if (!provider || cardTypeId === null) return;
 
     (async () => {
       try {
@@ -37,11 +46,11 @@ export default function useSpecialCardMint({
         const wallet = await signer.getAddress();
         const contract = new ethers.Contract(contractAddress, SpecialCardABI.abi, signer);
 
-        const last = await contract.lastMintTime(wallet, cardType);
+        const last = await contract.lastMintTime(wallet, cardTypeId);
         const now = Math.floor(Date.now() / 1000);
         const diff = now - Number(last);
 
-        const minted = await contract.hasMintedType(wallet, cardType);
+        const minted = await contract.hasMintedType(wallet, cardTypeId);
         setHasMinted(minted);
 
         if (diff < COOLDOWN) {
@@ -52,21 +61,19 @@ export default function useSpecialCardMint({
           setTimeLeft(0);
         }
 
-        const current = await contract.cardSupply(cardType);
+        const current = await contract.cardSupply(cardTypeId);
         setSupply(Number(current));
       } catch (err) {
         console.error("SpecialCard status error:", err);
         setStatus("❌ Error fetching status.");
       }
     })();
-  }, [provider, cardType]);
+  }, [provider, cardTypeId]);
 
   const mint = async () => {
     try {
-      console.log("🔍 Attempting mint with cardType:", cardType, "Type:", typeof cardType);
-
-      if (!isValidCardType(cardType)) {
-        setStatus("❌ Invalid card type provided. Must be a non-negative integer.");
+      if (cardTypeId === null) {
+        setStatus("❌ Cannot mint: invalid or unresolved card type.");
         return;
       }
 
@@ -87,8 +94,7 @@ export default function useSpecialCardMint({
 
       setStatus("Minting...");
       const contract = new ethers.Contract(contractAddress, SpecialCardABI.abi, signer);
-
-      const tx = await contract.mintSpecialCard(Number(cardType));
+      const tx = await contract.mintSpecialCard(cardTypeId);
       await tx.wait();
 
       setStatus("✅ Minted!");
