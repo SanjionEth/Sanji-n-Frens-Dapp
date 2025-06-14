@@ -20,8 +20,15 @@ export default function useSpecialCardMint({
   const [hasMinted, setHasMinted] = useState(false);
   const [supply, setSupply] = useState(null);
 
+  // Utility: Validates cardType before use
+  const isValidCardType = (value) =>
+    typeof value === "number" && Number.isInteger(value) && value >= 0;
+
   useEffect(() => {
-    if (!provider || typeof cardType !== "number") return;
+    if (!provider || !isValidCardType(cardType)) {
+      console.warn("❌ useSpecialCardMint: Invalid cardType:", cardType);
+      return;
+    }
 
     (async () => {
       try {
@@ -56,8 +63,10 @@ export default function useSpecialCardMint({
 
   const mint = async () => {
     try {
-      if (typeof cardType !== "number") {
-        setStatus("❌ Invalid card type.");
+      console.log("🔍 Attempting mint with cardType:", cardType, "Type:", typeof cardType);
+
+      if (!isValidCardType(cardType)) {
+        setStatus("❌ Invalid card type provided. Must be a non-negative integer.");
         return;
       }
 
@@ -79,7 +88,6 @@ export default function useSpecialCardMint({
       setStatus("Minting...");
       const contract = new ethers.Contract(contractAddress, SpecialCardABI.abi, signer);
 
-      // 🔒 Ensure cardType is passed as a number to avoid ENS resolution
       const tx = await contract.mintSpecialCard(Number(cardType));
       await tx.wait();
 
@@ -105,4 +113,3 @@ export default function useSpecialCardMint({
     remaining: supply !== null ? `${maxSupply - supply} / ${maxSupply}` : "Loading..."
   };
 }
-
