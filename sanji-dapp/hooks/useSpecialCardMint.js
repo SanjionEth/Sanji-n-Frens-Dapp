@@ -2,15 +2,14 @@ import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import SpecialCardABI from "../contracts/SpecialCardNFT.json";
 import ERC20ABI from "../contracts/erc20.json";
-import { getCardTypeId } from "../utils/getCardTypeId";
 
 const SANJI_ADDRESS = "0x8E0B3E3Cb4468B6aa07a64E69DEb72aeA8eddC6F";
 const COOLDOWN = 365 * 24 * 60 * 60; // 1 year in seconds
+const cardTypeId = 0; // 🔒 Hardcoded for "Sanji's Tactical Whistle"
 
 export default function useSpecialCardMint({
   provider,
   contractAddress,
-  cardName,
   requiredSanji,
   maxSupply
 }) {
@@ -20,24 +19,9 @@ export default function useSpecialCardMint({
   const [timeLeft, setTimeLeft] = useState(null);
   const [hasMinted, setHasMinted] = useState(false);
   const [supply, setSupply] = useState(null);
-  const [cardTypeId, setCardTypeId] = useState(null);
 
   useEffect(() => {
-    try {
-      const id = getCardTypeId(cardName);
-      if (typeof id === "number" && id >= 0) {
-        setCardTypeId(id);
-      } else {
-        throw new Error("Invalid card type ID");
-      }
-    } catch (err) {
-      console.error("❌ Card type mapping error:", err.message);
-      setStatus(`❌ Could not resolve card type for "${cardName}"`);
-    }
-  }, [cardName]);
-
-  useEffect(() => {
-    if (!provider || cardTypeId === null) return;
+    if (!provider) return;
 
     (async () => {
       try {
@@ -68,15 +52,10 @@ export default function useSpecialCardMint({
         setStatus("❌ Error fetching status.");
       }
     })();
-  }, [provider, cardTypeId]);
+  }, [provider, contractAddress]);
 
   const mint = async () => {
     try {
-      if (cardTypeId === null) {
-        setStatus("❌ Cannot mint: invalid or unresolved card type.");
-        return;
-      }
-
       setMinting(true);
       setStatus("Checking SANJI balance...");
 
