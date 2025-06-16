@@ -37,7 +37,7 @@ export default function MainPage() {
   const whistle = useSpecialCardMint({
     provider: walletClient,
     contractAddress: "0x1A7475d874E07860a5b4E4a026FFb49D0614AD87",
-    cardType: "Whistle", // ✅ fixed identifier
+    cardType: "Whistle",
     requiredSanji: ethers.parseUnits("5000000", 18),
     maxSupply: 200
   });
@@ -45,7 +45,7 @@ export default function MainPage() {
   const altman = useSpecialCardMint({
     provider: walletClient,
     contractAddress: "0xbd4087A4991278407B2275D17D94942e96D3Dac4",
-    cardType: "Altman", // ✅ fixed identifier
+    cardType: "Altman",
     requiredSanji: ethers.parseUnits("10000000", 18),
     maxSupply: 100
   });
@@ -115,6 +115,7 @@ export default function MainPage() {
           <p>Cooldown: {Math.ceil(sanjiTimeLeft / 86400)} days left</p>
         )}
 
+        {/* Stablecoin fallback */}
         {showStablecoin && (
           <div className="space-y-2">
             <select
@@ -160,15 +161,13 @@ export default function MainPage() {
               : whistle.hasMinted
               ? "✅ Already Minted"
               : whistle.cooldownActive
-              ? `⏳ Cooldown Active (${Math.ceil(whistle.timeLeft / 86400)} days left)`
+              ? `⏳ Cooldown Active (${Math.ceil(whistle.timeLeft / 86400)}d)`
               : "Mint Sanji’s Tactical Whistle (5M SANJI)"}
           </button>
-          <div className="text-sm mt-2">
-            <p>Remaining Whistle Cards: {whistle.remaining}</p>
-            {whistle.status && !whistle.status.startsWith("✅") && (
-              <p className="mt-1 text-yellow-300">{whistle.status}</p>
-            )}
-          </div>
+          <p className="mt-2">Remaining Whistle Cards: {whistle.remaining}</p>
+          {whistle.status && !whistle.status.startsWith("✅") && (
+            <p className="text-yellow-300">{whistle.status}</p>
+          )}
         </div>
 
         {/* Altman Card */}
@@ -189,15 +188,13 @@ export default function MainPage() {
               : altman.hasMinted
               ? "✅ Already Minted"
               : altman.cooldownActive
-              ? `⏳ Cooldown Active (${Math.ceil(altman.timeLeft / 86400)} days left)`
+              ? `⏳ Cooldown Active (${Math.ceil(altman.timeLeft / 86400)}d)`
               : "Mint Sam Altman's First Code (10M SANJI)"}
           </button>
-          <div className="text-sm mt-2">
-            <p>Remaining Altman Cards: {altman.remaining}</p>
-            {altman.status && !altman.status.startsWith("✅") && (
-              <p className="mt-1 text-yellow-300">{altman.status}</p>
-            )}
-          </div>
+          <p className="mt-2">Remaining Altman Cards: {altman.remaining}</p>
+          {altman.status && !altman.status.startsWith("✅") && (
+            <p className="text-yellow-300">{altman.status}</p>
+          )}
         </div>
       </div>
     </main>
