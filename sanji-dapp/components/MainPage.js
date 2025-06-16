@@ -21,7 +21,7 @@ export default function MainPage() {
     cooldownActive: sanjiCooldown,
     timeLeft: sanjiTimeLeft,
     hasMinted: sanjiHasMinted,
-    remaining: sanjiRemaining,
+    remaining: sanjiRemaining
   } = useSanjiMint(walletClient);
 
   const {
@@ -31,7 +31,7 @@ export default function MainPage() {
     cooldownActive: tokenCooldown,
     timeLeft: tokenTimeLeft,
     hasMinted: tokenHasMinted,
-    remaining: tokenRemaining,
+    remaining: tokenRemaining
   } = useStablecoinMint(walletClient);
 
   const whistle = useSpecialCardMint({
@@ -39,7 +39,7 @@ export default function MainPage() {
     contractAddress: "0x1A7475d874E07860a5b4E4a026FFb49D0614AD87",
     cardType: "Whistle",
     requiredSanji: ethers.parseUnits("5000000", 18),
-    maxSupply: 200,
+    maxSupply: 200
   });
 
   const altman = useSpecialCardMint({
@@ -47,7 +47,7 @@ export default function MainPage() {
     contractAddress: "0xbd4087A4991278407B2275D17D94942e96D3Dac4",
     cardType: "Altman",
     requiredSanji: ethers.parseUnits("10000000", 18),
-    maxSupply: 100,
+    maxSupply: 100
   });
 
   const handleSanjiMint = async () => {
@@ -73,6 +73,7 @@ export default function MainPage() {
       console.log("Whistle mint prevented: already minted or cooldown active.");
       return;
     }
+
     try {
       await whistle.mint();
     } catch (err) {
@@ -85,6 +86,7 @@ export default function MainPage() {
       console.log("Altman mint prevented: already minted or cooldown active.");
       return;
     }
+
     try {
       await altman.mint();
     } catch (err) {
@@ -107,6 +109,7 @@ export default function MainPage() {
         <p>✅ useAccount is working: {isConnected ? "Connected" : "Not connected"}</p>
         <p>🧪 useWalletClient result: {walletClient ? "✅ WalletClient available" : "❌ WalletClient not available"}</p>
 
+        {/* Base Deck Mint */}
         <button
           onClick={handleSanjiMint}
           disabled={sanjiMinting || sanjiCooldown || sanjiHasMinted}
@@ -118,6 +121,7 @@ export default function MainPage() {
         <p>Remaining Base Decks: {sanjiRemaining}</p>
         {sanjiCooldown && sanjiTimeLeft && <p>Cooldown: {Math.ceil(sanjiTimeLeft / 86400)} days left</p>}
 
+        {/* Stablecoin Mint Option */}
         {showStablecoin && (
           <div className="space-y-2">
             <select
@@ -143,45 +147,63 @@ export default function MainPage() {
 
         <hr className="my-4" />
 
-        {/* Whistle card UI */}
-        <button
-          onClick={handleWhistleMint}
-          disabled={whistle.minting || whistle.cooldownActive || whistle.hasMinted}
-          className="bg-purple-600 px-4 py-2 rounded disabled:opacity-50"
+        {/* Whistle Card */}
+        <div
+          className={`p-4 rounded transition-all ${
+            whistle.hasMinted || whistle.cooldownActive
+              ? "bg-gray-700 opacity-50 cursor-not-allowed"
+              : "bg-purple-600"
+          }`}
         >
-          {whistle.minting
-            ? "Minting..."
-            : whistle.hasMinted
-            ? "✅ Already Minted"
-            : whistle.cooldownActive
-            ? "⏳ Cooldown Active"
-            : "Mint Sanji’s Tactical Whistle (5M SANJI)"}
-        </button>
-        <p>{whistle.status}</p>
-        <p>Remaining Whistle Cards: {whistle.remaining}</p>
-        {whistle.cooldownActive && whistle.timeLeft && (
-          <p>Cooldown: {Math.ceil(whistle.timeLeft / 86400)} days left</p>
-        )}
+          <button
+            onClick={handleWhistleMint}
+            disabled={whistle.minting || whistle.cooldownActive || whistle.hasMinted}
+            className="w-full px-4 py-2 rounded text-white disabled:opacity-50"
+          >
+            {whistle.minting
+              ? "Minting..."
+              : whistle.hasMinted
+              ? "✅ Already Minted"
+              : whistle.cooldownActive
+              ? `⏳ Cooldown Active (${Math.ceil(whistle.timeLeft / 86400)} days left)`
+              : "Mint Sanji’s Tactical Whistle (5M SANJI)"}
+          </button>
+          <div className="text-sm mt-2">
+            <p>Remaining Whistle Cards: {whistle.remaining}</p>
+            {whistle.status && !whistle.status.startsWith("✅") && (
+              <p className="mt-1 text-yellow-300">{whistle.status}</p>
+            )}
+          </div>
+        </div>
 
-        {/* Altman card UI */}
-        <button
-          onClick={handleAltmanMint}
-          disabled={altman.minting || altman.cooldownActive || altman.hasMinted}
-          className="bg-yellow-500 px-4 py-2 rounded disabled:opacity-50"
+        {/* Altman Card */}
+        <div
+          className={`p-4 rounded transition-all ${
+            altman.hasMinted || altman.cooldownActive
+              ? "bg-gray-700 opacity-50 cursor-not-allowed"
+              : "bg-yellow-500"
+          }`}
         >
-          {altman.minting
-            ? "Minting..."
-            : altman.hasMinted
-            ? "✅ Already Minted"
-            : altman.cooldownActive
-            ? "⏳ Cooldown Active"
-            : "Mint Sam Altman's First Code (10M SANJI)"}
-        </button>
-        <p>{altman.status}</p>
-        <p>Remaining Altman Cards: {altman.remaining}</p>
-        {altman.cooldownActive && altman.timeLeft && (
-          <p>Cooldown: {Math.ceil(altman.timeLeft / 86400)} days left</p>
-        )}
+          <button
+            onClick={handleAltmanMint}
+            disabled={altman.minting || altman.cooldownActive || altman.hasMinted}
+            className="w-full px-4 py-2 rounded text-white disabled:opacity-50"
+          >
+            {altman.minting
+              ? "Minting..."
+              : altman.hasMinted
+              ? "✅ Already Minted"
+              : altman.cooldownActive
+              ? `⏳ Cooldown Active (${Math.ceil(altman.timeLeft / 86400)} days left)`
+              : "Mint Sam Altman's First Code (10M SANJI)"}
+          </button>
+          <div className="text-sm mt-2">
+            <p>Remaining Altman Cards: {altman.remaining}</p>
+            {altman.status && !altman.status.startsWith("✅") && (
+              <p className="mt-1 text-yellow-300">{altman.status}</p>
+            )}
+          </div>
+        </div>
       </div>
     </main>
   );
