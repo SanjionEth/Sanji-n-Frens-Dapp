@@ -5,7 +5,6 @@ import ERC20ABI from "../contracts/erc20.json";
 
 const SANJI_ADDRESS = "0x8E0B3E3Cb4468B6aa07a64E69DEb72aeA8eddC6F";
 const COOLDOWN = 365 * 24 * 60 * 60; // 1 year in seconds
-const cardTypeId = 0; // 🔒 Hardcoded for "Sanji's Tactical Whistle"
 
 export default function useSpecialCardMint({
   provider,
@@ -28,13 +27,17 @@ export default function useSpecialCardMint({
         const browserProvider = new ethers.BrowserProvider(window.ethereum);
         const signer = await browserProvider.getSigner();
         const wallet = await signer.getAddress();
+
+        if (!ethers.isAddress(wallet)) throw new Error("Invalid wallet address");
+
         const contract = new ethers.Contract(contractAddress, SpecialCardABI.abi, signer);
 
-        const last = await contract.lastMintTime(wallet, cardTypeId);
+        // 🟢 Updated to match your contract: uses just the address
+        const last = await contract.lastMintTime(wallet);
         const now = Math.floor(Date.now() / 1000);
         const diff = now - Number(last);
 
-        const minted = await contract.hasMintedType(wallet, cardTypeId);
+        const minted = await contract.hasMinted(wallet);
         setHasMinted(minted);
 
         if (diff < COOLDOWN) {
@@ -45,7 +48,7 @@ export default function useSpecialCardMint({
           setTimeLeft(0);
         }
 
-        const current = await contract.cardSupply(cardTypeId);
+        const current = await contract.currentSupply();
         setSupply(Number(current));
       } catch (err) {
         console.error("SpecialCard status error:", err);
@@ -73,7 +76,7 @@ export default function useSpecialCardMint({
 
       setStatus("Minting...");
       const contract = new ethers.Contract(contractAddress, SpecialCardABI.abi, signer);
-      const tx = await contract.mintSpecialCard(wallet); // ✅
+      const tx = await contract.mintSpecialCard(wallet); // ✅ This matches your contract
       await tx.wait();
 
       setStatus("✅ Minted!");
@@ -84,17 +87,4 @@ export default function useSpecialCardMint({
       console.error("SpecialCard mint failed:", err);
       setStatus(`❌ Mint failed: ${err.message || "Unknown error"}`);
     } finally {
-      setMinting(false);
-    }
-  };
-
-  return {
-    mint,
-    minting,
-    status,
-    cooldownActive,
-    timeLeft,
-    hasMinted,
-    remaining: supply !== null ? `${maxSupply - supply} / ${maxSupply}` : "Loading..."
-  };
-}
+      setMinting(fa
