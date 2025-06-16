@@ -1,5 +1,5 @@
 🚀 Deploying contracts with: 0xc32CE420D05f9CD21E52eD2E68e7C9ee0037012c
 ✅ BaseDeckNFT deployed to: 0x0a760B0657248a88BCB3a3a7fdF537d2968C723b
 ✅ Sanji's Tactical Whistle deployed to: 0x1A7475d874E07860a5b4E4a026FFb49D0614AD87
-✅ Altman's First Code deployed to: 0xF85Ec44370f1dCbea4765B7481bA83E8634062FA
+✅ Altman's First Code deployed to: 0xbd4087A4991278407B2275D17D94942e96D3Dac4
 Special Card: 0xd963594874f3366F9fa34f43fAf1b8036f9B5426

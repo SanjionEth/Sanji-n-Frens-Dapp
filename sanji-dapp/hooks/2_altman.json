@@ -1,0 +1,10 @@
+{
+  "name": "Sam Altman's First Code",
+  "description": "An ultra-rare gold card commemorating OpenAI’s origins. Requires 10,000,000+ SANJI to mint.",
+  "image": "https://ipfs.io/ipfs/bafybeifttovhk3lzxdeav3zsbnkddqifcux5u2d2ryn7kqckq7he3ujgmq/",
+  "attributes": [
+    { "trait_type": "Rarity", "value": "Gold" },
+    { "trait_type": "SANJI Required", "value": "10,000,000+" },
+    { "trait_type": "Edition", "value": "Special" }
+  ]
+}

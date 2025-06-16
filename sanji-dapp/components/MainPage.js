@@ -42,7 +42,7 @@ export default function MainPage() {
 
   const altman = useSpecialCardMint({
     provider: walletClient,
-    contractAddress: "0xF85Ec44370f1dCbea4765B7481bA83E8634062FA",
+    contractAddress: "0xbd4087A4991278407B2275D17D94942e96D3Dac4",
     cardType: "Sam Altman's First Code",
     requiredSanji: ethers.parseUnits("10000000", 18),
     maxSupply: 100
@@ -80,6 +80,11 @@ export default function MainPage() {
   };
 
   const handleAltmanMint = async () => {
+    if (altman.hasMinted || altman.cooldownActive) {
+      console.log("Altman mint prevented: already minted or cooldown active.");
+      return;
+    }
+
     try {
       await altman.mint();
     } catch (err) {
@@ -138,7 +143,7 @@ export default function MainPage() {
 
         <hr className="my-4" />
 
-        {/* ✅ Whistle section updated to match Base Deck layout */}
+        {/* Whistle card UI */}
         <button
           onClick={handleWhistleMint}
           disabled={whistle.minting || whistle.cooldownActive || whistle.hasMinted}
@@ -158,17 +163,25 @@ export default function MainPage() {
           <p>Cooldown: {Math.ceil(whistle.timeLeft / 86400)} days left</p>
         )}
 
-        {/* Altman unchanged for now */}
+        {/* Altman card UI - now matches layout */}
         <button
           onClick={handleAltmanMint}
           disabled={altman.minting || altman.cooldownActive || altman.hasMinted}
           className="bg-yellow-500 px-4 py-2 rounded disabled:opacity-50"
         >
-          {altman.minting ? "Minting..." : "Mint Sam Altman's First Code (10M SANJI)"}
+          {altman.minting
+            ? "Minting..."
+            : altman.hasMinted
+            ? "✅ Already Minted"
+            : altman.cooldownActive
+            ? "⏳ Cooldown Active"
+            : "Mint Sam Altman's First Code (10M SANJI)"}
         </button>
         <p>{altman.status}</p>
-        <p>Remaining: {altman.remaining}</p>
-        {altman.cooldownActive && <p>Cooldown: {Math.ceil(altman.timeLeft / 86400)} days left</p>}
+        <p>Remaining Altman Cards: {altman.remaining}</p>
+        {altman.cooldownActive && altman.timeLeft && (
+          <p>Cooldown: {Math.ceil(altman.timeLeft / 86400)} days left</p>
+        )}
       </div>
     </main>
   );
