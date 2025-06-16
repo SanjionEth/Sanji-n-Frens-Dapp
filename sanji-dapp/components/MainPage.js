@@ -133,7 +133,7 @@ export default function MainPage() {
 
         <hr className="my-4" />
 
-        <div
+       <div
   className={`p-4 rounded transition-all ${
     whistle.hasMinted || whistle.cooldownActive
       ? "bg-gray-700 opacity-50 cursor-not-allowed"
@@ -148,7 +148,7 @@ export default function MainPage() {
     {whistle.hasMinted
       ? "✅ Already Minted"
       : whistle.cooldownActive
-      ? "⏳ Cooldown Active"
+      ? `⏳ Cooldown Active (${Math.ceil(whistle.timeLeft / 86400)} days left)`
       : whistle.minting
       ? "Minting..."
       : "Mint Sanji’s Tactical Whistle (5M SANJI)"}
@@ -156,12 +156,12 @@ export default function MainPage() {
 
   <div className="text-sm mt-2">
     <p>Remaining: {whistle.remaining}</p>
-    {whistle.cooldownActive && whistle.timeLeft && (
-      <p>Cooldown: {Math.ceil(whistle.timeLeft / 86400)} days left</p>
+    {whistle.status && !whistle.status.startsWith("✅") && (
+      <p className="mt-1 text-yellow-300">{whistle.status}</p>
     )}
-    {whistle.status && <p className="mt-1 text-yellow-300">{whistle.status}</p>}
   </div>
 </div>
+
 
         <button
           onClick={handleAltmanMint}
