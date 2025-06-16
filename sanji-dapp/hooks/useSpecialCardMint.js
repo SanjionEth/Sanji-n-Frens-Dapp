@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
-import WhistleABI from "../contracts/SpecialCardNFT.json"; // For Whistle card
-import AltmanABI from "../contracts/SpecialCardNFT_Altman.json"; // For Altman card
+import WhistleABI from "../contracts/SpecialCardNFT.json";
+import AltmanABI from "../contracts/SpecialCardNFT_Altman.json";
 import ERC20ABI from "../contracts/erc20.json";
 
 const SANJI_ADDRESS = "0x8E0B3E3Cb4468B6aa07a64E69DEb72aeA8eddC6F";
@@ -82,8 +82,8 @@ export default function useSpecialCardMint({
       const contract = new ethers.Contract(contractAddress, selectedABI, signer);
 
       const tx = isAltman
-        ? await contract.mintSpecialCard()         // Altman: no args
-        : await contract.mintSpecialCard(wallet);  // Whistle: address arg
+        ? await contract.mintSpecialCard()        // ✅ no param
+        : await contract.mintSpecialCard(wallet); // ✅ pass address only for Whistle
 
       await tx.wait();
 
