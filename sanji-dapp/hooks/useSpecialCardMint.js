@@ -32,7 +32,6 @@ export default function useSpecialCardMint({
 
         const contract = new ethers.Contract(contractAddress, SpecialCardABI.abi, signer);
 
-        // 🟢 Updated to match your contract: uses just the address
         const last = await contract.lastMintTime(wallet);
         const now = Math.floor(Date.now() / 1000);
         const diff = now - Number(last);
@@ -76,7 +75,7 @@ export default function useSpecialCardMint({
 
       setStatus("Minting...");
       const contract = new ethers.Contract(contractAddress, SpecialCardABI.abi, signer);
-      const tx = await contract.mintSpecialCard(wallet); // ✅ This matches your contract
+      const tx = await contract.mintSpecialCard(wallet);
       await tx.wait();
 
       setStatus("✅ Minted!");
@@ -86,7 +85,18 @@ export default function useSpecialCardMint({
     } catch (err) {
       console.error("SpecialCard mint failed:", err);
       setStatus(`❌ Mint failed: ${err.message || "Unknown error"}`);
-   } finally {
-  setMinting(false);
-}
+    } finally {
+      setMinting(false);
+    }
+  };
 
+  return {
+    mint,
+    minting,
+    status,
+    cooldownActive,
+    timeLeft,
+    hasMinted,
+    remaining: supply !== null ? `${maxSupply - supply} / ${maxSupply}` : "Loading..."
+  };
+}
