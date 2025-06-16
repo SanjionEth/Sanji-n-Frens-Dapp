@@ -66,7 +66,6 @@ export default function MainPage() {
     }
   };
 
-  // ✅ Fixed: Prevent minting if already minted or on cooldown
   const handleWhistleMint = async () => {
     if (whistle.hasMinted || whistle.cooldownActive) {
       console.log("Whistle mint prevented: already minted or cooldown active.");
@@ -139,35 +138,27 @@ export default function MainPage() {
 
         <hr className="my-4" />
 
-        <div
-          className={`p-4 rounded transition-all ${
-            whistle.hasMinted || whistle.cooldownActive
-              ? "bg-gray-700 opacity-50 cursor-not-allowed"
-              : "bg-purple-600"
-          }`}
+        {/* ✅ Whistle section updated to match Base Deck layout */}
+        <button
+          onClick={handleWhistleMint}
+          disabled={whistle.minting || whistle.cooldownActive || whistle.hasMinted}
+          className="bg-purple-600 px-4 py-2 rounded disabled:opacity-50"
         >
-          <button
-            onClick={handleWhistleMint}
-            disabled={whistle.minting || whistle.cooldownActive || whistle.hasMinted}
-            className="w-full px-4 py-2 rounded text-white disabled:opacity-50"
-          >
-            {whistle.hasMinted
-              ? "✅ Already Minted"
-              : whistle.cooldownActive
-              ? `⏳ Cooldown Active (${Math.ceil(whistle.timeLeft / 86400)} days left)`
-              : whistle.minting
-              ? "Minting..."
-              : "Mint Sanji’s Tactical Whistle (5M SANJI)"}
-          </button>
+          {whistle.minting
+            ? "Minting..."
+            : whistle.hasMinted
+            ? "✅ Already Minted"
+            : whistle.cooldownActive
+            ? "⏳ Cooldown Active"
+            : "Mint Sanji’s Tactical Whistle (5M SANJI)"}
+        </button>
+        <p>{whistle.status}</p>
+        <p>Remaining Whistle Cards: {whistle.remaining}</p>
+        {whistle.cooldownActive && whistle.timeLeft && (
+          <p>Cooldown: {Math.ceil(whistle.timeLeft / 86400)} days left</p>
+        )}
 
-          <div className="text-sm mt-2">
-            <p>Remaining: {whistle.remaining}</p>
-            {whistle.status && !whistle.status.startsWith("✅") && (
-              <p className="mt-1 text-yellow-300">{whistle.status}</p>
-            )}
-          </div>
-        </div>
-
+        {/* Altman unchanged for now */}
         <button
           onClick={handleAltmanMint}
           disabled={altman.minting || altman.cooldownActive || altman.hasMinted}
