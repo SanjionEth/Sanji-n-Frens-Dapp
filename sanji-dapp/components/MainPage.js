@@ -69,11 +69,7 @@ export default function MainPage() {
   };
 
   const handleWhistleMint = async () => {
-    if (whistle.hasMinted || whistle.cooldownActive) {
-      console.log("Whistle mint prevented: already minted or cooldown active.");
-      return;
-    }
-
+    if (whistle.hasMinted || whistle.cooldownActive) return;
     try {
       await whistle.mint();
     } catch (err) {
@@ -82,11 +78,7 @@ export default function MainPage() {
   };
 
   const handleAltmanMint = async () => {
-    if (altman.hasMinted || altman.cooldownActive) {
-      console.log("Altman mint prevented: already minted or cooldown active.");
-      return;
-    }
-
+    if (altman.hasMinted || altman.cooldownActive) return;
     try {
       await altman.mint();
     } catch (err) {
@@ -109,7 +101,7 @@ export default function MainPage() {
         <p>✅ useAccount is working: {isConnected ? "Connected" : "Not connected"}</p>
         <p>🧪 useWalletClient result: {walletClient ? "✅ WalletClient available" : "❌ WalletClient not available"}</p>
 
-        {/* Base Deck Mint */}
+        {/* === Base Deck Mint === */}
         <button
           onClick={handleSanjiMint}
           disabled={sanjiMinting || sanjiCooldown || sanjiHasMinted}
@@ -119,9 +111,11 @@ export default function MainPage() {
         </button>
         <p>{sanjiStatus}</p>
         <p>Remaining Base Decks: {sanjiRemaining}</p>
-        {sanjiCooldown && sanjiTimeLeft && <p>Cooldown: {Math.ceil(sanjiTimeLeft / 86400)} days left</p>}
+        {sanjiCooldown && sanjiTimeLeft && (
+          <p>Cooldown: {Math.ceil(sanjiTimeLeft / 86400)} days left</p>
+        )}
 
-        {/* Stablecoin Mint Option */}
+        {/* === Stablecoin Option === */}
         {showStablecoin && (
           <div className="space-y-2">
             <select
@@ -141,69 +135,53 @@ export default function MainPage() {
             </button>
             <p>{tokenStatus}</p>
             <p>Remaining Base Decks: {tokenRemaining}</p>
-            {tokenCooldown && tokenTimeLeft && <p>Cooldown: {Math.ceil(tokenTimeLeft / 86400)} days left</p>}
+            {tokenCooldown && tokenTimeLeft && (
+              <p>Cooldown: {Math.ceil(tokenTimeLeft / 86400)} days left</p>
+            )}
           </div>
         )}
 
         <hr className="my-4" />
 
-        {/* Whistle Card */}
-        <div
-          className={`p-4 rounded transition-all ${
-            whistle.hasMinted || whistle.cooldownActive
-              ? "bg-gray-700 opacity-50 cursor-not-allowed"
-              : "bg-purple-600"
-          }`}
+        {/* === Whistle Card === */}
+        <button
+          onClick={handleWhistleMint}
+          disabled={whistle.minting || whistle.cooldownActive || whistle.hasMinted}
+          className="bg-purple-600 px-4 py-2 rounded disabled:opacity-50"
         >
-          <button
-            onClick={handleWhistleMint}
-            disabled={whistle.minting || whistle.cooldownActive || whistle.hasMinted}
-            className="w-full px-4 py-2 rounded text-white disabled:opacity-50"
-          >
-            {whistle.minting
-              ? "Minting..."
-              : whistle.hasMinted
-              ? "✅ Already Minted"
-              : whistle.cooldownActive
-              ? `⏳ Cooldown Active (${Math.ceil(whistle.timeLeft / 86400)} days left)`
-              : "Mint Sanji’s Tactical Whistle (5M SANJI)"}
-          </button>
-          <div className="text-sm mt-2">
-            <p>Remaining Whistle Cards: {whistle.remaining}</p>
-            {whistle.status && !whistle.status.startsWith("✅") && (
-              <p className="mt-1 text-yellow-300">{whistle.status}</p>
-            )}
-          </div>
-        </div>
+          {whistle.minting
+            ? "Minting..."
+            : whistle.hasMinted
+            ? "✅ Already Minted"
+            : whistle.cooldownActive
+            ? "⏳ Cooldown Active"
+            : "Mint Sanji’s Tactical Whistle (5M SANJI)"}
+        </button>
+        <p>{whistle.status}</p>
+        <p>Remaining Whistle Cards: {whistle.remaining}</p>
+        {whistle.cooldownActive && whistle.timeLeft && (
+          <p>Cooldown: {Math.ceil(whistle.timeLeft / 86400)} days left</p>
+        )}
 
-        {/* Altman Card */}
-        <div
-          className={`p-4 rounded transition-all ${
-            altman.hasMinted || altman.cooldownActive
-              ? "bg-gray-700 opacity-50 cursor-not-allowed"
-              : "bg-yellow-500"
-          }`}
+        {/* === Altman Card === */}
+        <button
+          onClick={handleAltmanMint}
+          disabled={altman.minting || altman.cooldownActive || altman.hasMinted}
+          className="bg-yellow-500 px-4 py-2 rounded disabled:opacity-50"
         >
-          <button
-            onClick={handleAltmanMint}
-            disabled={altman.minting || altman.cooldownActive || altman.hasMinted}
-            className="w-full px-4 py-2 rounded text-white disabled:opacity-50"
-          >
-            {altman.minting
-              ? "Minting..."
-              : altman.hasMinted
-              ? "✅ Already Minted"
-              : altman.cooldownActive
-              ? `⏳ Cooldown Active (${Math.ceil(altman.timeLeft / 86400)} days left)`
-              : "Mint Sam Altman's First Code (10M SANJI)"}
-          </button>
-          <div className="text-sm mt-2">
-            <p>Remaining Altman Cards: {altman.remaining}</p>
-            {altman.status && !altman.status.startsWith("✅") && (
-              <p className="mt-1 text-yellow-300">{altman.status}</p>
-            )}
-          </div>
-        </div>
+          {altman.minting
+            ? "Minting..."
+            : altman.hasMinted
+            ? "✅ Already Minted"
+            : altman.cooldownActive
+            ? "⏳ Cooldown Active"
+            : "Mint Sam Altman's First Code (10M SANJI)"}
+        </button>
+        <p>{altman.status}</p>
+        <p>Remaining Altman Cards: {altman.remaining}</p>
+        {altman.cooldownActive && altman.timeLeft && (
+          <p>Cooldown: {Math.ceil(altman.timeLeft / 86400)} days left</p>
+        )}
       </div>
     </main>
   );
