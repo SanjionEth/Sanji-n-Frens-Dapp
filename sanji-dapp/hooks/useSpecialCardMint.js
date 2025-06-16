@@ -52,7 +52,10 @@ export default function useSpecialCardMint({
           setTimeLeft(0);
         }
 
-        const current = await contract.currentSupply();
+        const current = isAltman
+          ? await contract.globalTokenId()
+          : await contract.currentSupply();
+
         setSupply(Number(current));
       } catch (err) {
         console.error("SpecialCard status error:", err);
@@ -82,8 +85,8 @@ export default function useSpecialCardMint({
       const contract = new ethers.Contract(contractAddress, selectedABI, signer);
 
       const tx = isAltman
-        ? await contract.mintSpecialCard()        // ✅ no param for Altman
-        : await contract.mintSpecialCard(wallet); // ✅ address param for Whistle
+        ? await contract.mintSpecialCard()
+        : await contract.mintSpecialCard(wallet);
 
       await tx.wait();
 
