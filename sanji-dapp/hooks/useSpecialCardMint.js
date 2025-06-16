@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
-import SpecialCardABI from "../contracts/SpecialCardNFT.json";
+import WhistleABI from "../contracts/SpecialCardNFT.json"; // For Whistle card
+import AltmanABI from "../contracts/SpecialCardNFT_Altman.json"; // For Altman card
 import ERC20ABI from "../contracts/erc20.json";
 
 const SANJI_ADDRESS = "0x8E0B3E3Cb4468B6aa07a64E69DEb72aeA8eddC6F";
@@ -10,7 +11,8 @@ export default function useSpecialCardMint({
   provider,
   contractAddress,
   requiredSanji,
-  maxSupply
+  maxSupply,
+  cardType // "Whistle" or "Altman"
 }) {
   const [status, setStatus] = useState("");
   const [minting, setMinting] = useState(false);
@@ -18,6 +20,9 @@ export default function useSpecialCardMint({
   const [timeLeft, setTimeLeft] = useState(null);
   const [hasMinted, setHasMinted] = useState(false);
   const [supply, setSupply] = useState(null);
+
+  const isAltman = cardType === "Altman";
+  const selectedABI = isAltman ? AltmanABI.abi : WhistleABI.abi;
 
   useEffect(() => {
     if (!provider) return;
@@ -30,7 +35,7 @@ export default function useSpecialCardMint({
 
         if (!ethers.isAddress(wallet)) throw new Error("Invalid wallet address");
 
-        const contract = new ethers.Contract(contractAddress, SpecialCardABI.abi, signer);
+        const contract = new ethers.Contract(contractAddress, selectedABI, signer);
 
         const last = await contract.lastMintTime(wallet);
         const now = Math.floor(Date.now() / 1000);
@@ -74,8 +79,12 @@ export default function useSpecialCardMint({
       }
 
       setStatus("Minting...");
-      const contract = new ethers.Contract(contractAddress, SpecialCardABI.abi, signer);
-      const tx = await contract.mintSpecialCard(); // ✅ FIX: no parameters
+      const contract = new ethers.Contract(contractAddress, selectedABI, signer);
+
+      const tx = isAltman
+        ? await contract.mintSpecialCard()         // Altman: no args
+        : await contract.mintSpecialCard(wallet);  // Whistle: address arg
+
       await tx.wait();
 
       setStatus("✅ Minted!");
