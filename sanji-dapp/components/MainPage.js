@@ -1,3 +1,5 @@
+// MainPage.js
+
 import Image from "next/image";
 import { useAccount, useWalletClient } from "wagmi";
 import { useState } from "react";
@@ -19,7 +21,7 @@ export default function MainPage() {
     cooldownActive: sanjiCooldown,
     timeLeft: sanjiTimeLeft,
     hasMinted: sanjiHasMinted,
-    remaining: sanjiRemaining
+    remaining: sanjiRemaining,
   } = useSanjiMint(walletClient);
 
   const {
@@ -29,23 +31,23 @@ export default function MainPage() {
     cooldownActive: tokenCooldown,
     timeLeft: tokenTimeLeft,
     hasMinted: tokenHasMinted,
-    remaining: tokenRemaining
+    remaining: tokenRemaining,
   } = useStablecoinMint(walletClient);
 
   const whistle = useSpecialCardMint({
     provider: walletClient,
     contractAddress: "0x1A7475d874E07860a5b4E4a026FFb49D0614AD87",
-    cardType: "Sanji's Tactical Whistle",
+    cardType: "Whistle",
     requiredSanji: ethers.parseUnits("5000000", 18),
-    maxSupply: 200
+    maxSupply: 200,
   });
 
   const altman = useSpecialCardMint({
     provider: walletClient,
     contractAddress: "0xbd4087A4991278407B2275D17D94942e96D3Dac4",
-    cardType: "Sam Altman's First Code",
+    cardType: "Altman",
     requiredSanji: ethers.parseUnits("10000000", 18),
-    maxSupply: 100
+    maxSupply: 100,
   });
 
   const handleSanjiMint = async () => {
@@ -71,7 +73,6 @@ export default function MainPage() {
       console.log("Whistle mint prevented: already minted or cooldown active.");
       return;
     }
-
     try {
       await whistle.mint();
     } catch (err) {
@@ -84,7 +85,6 @@ export default function MainPage() {
       console.log("Altman mint prevented: already minted or cooldown active.");
       return;
     }
-
     try {
       await altman.mint();
     } catch (err) {
@@ -163,7 +163,7 @@ export default function MainPage() {
           <p>Cooldown: {Math.ceil(whistle.timeLeft / 86400)} days left</p>
         )}
 
-        {/* Altman card UI - now matches layout */}
+        {/* Altman card UI */}
         <button
           onClick={handleAltmanMint}
           disabled={altman.minting || altman.cooldownActive || altman.hasMinted}

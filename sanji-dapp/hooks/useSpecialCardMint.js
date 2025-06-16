@@ -59,7 +59,7 @@ export default function useSpecialCardMint({
         setStatus("❌ Error fetching status.");
       }
     })();
-  }, [provider, contractAddress]);
+  }, [provider, contractAddress, cardType]);
 
   const mint = async () => {
     try {
@@ -82,8 +82,8 @@ export default function useSpecialCardMint({
       const contract = new ethers.Contract(contractAddress, selectedABI, signer);
 
       const tx = isAltman
-        ? await contract.mintSpecialCard()        // ✅ no param
-        : await contract.mintSpecialCard(wallet); // ✅ pass address only for Whistle
+        ? await contract.mintSpecialCard()        // ✅ no param for Altman
+        : await contract.mintSpecialCard(wallet); // ✅ address param for Whistle
 
       await tx.wait();
 
@@ -109,3 +109,4 @@ export default function useSpecialCardMint({
     remaining: supply !== null ? `${maxSupply - supply} / ${maxSupply}` : "Loading..."
   };
 }
+
