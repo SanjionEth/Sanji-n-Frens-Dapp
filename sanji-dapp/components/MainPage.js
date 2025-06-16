@@ -1,188 +1,116 @@
 // MainPage.js
 
-import Image from "next/image";
-import { useAccount, useWalletClient } from "wagmi";
-import { useState } from "react";
-import useSanjiMint from "../hooks/useSanjiMint";
-import useStablecoinMint from "../hooks/useStablecoinMint";
-import useSpecialCardMint from "../hooks/useSpecialCardMint";
+import { useEffect, useState } from "react";
 import { ethers } from "ethers";
+import WhistleABI from "../contracts/SpecialCardNFT.json";
+import AltmanABI from "../contracts/SpecialCardNFT_Altman.json";
+import ERC20ABI from "../contracts/erc20.json";
 
-export default function MainPage() {
-  const { isConnected } = useAccount();
-  const { data: walletClient } = useWalletClient();
-  const [showStablecoin, setShowStablecoin] = useState(false);
-  const [selectedToken, setSelectedToken] = useState("USDT");
+const SANJI_ADDRESS = "0x8E0B3E3Cb4468B6aa07a64E69DEb72aeA8eddC6F";
+const COOLDOWN = 365 * 24 * 60 * 60; // 1 year in seconds
 
-  const {
-    mintWithSanji,
-    minting: sanjiMinting,
-    status: sanjiStatus,
-    cooldownActive: sanjiCooldown,
-    timeLeft: sanjiTimeLeft,
-    hasMinted: sanjiHasMinted,
-    remaining: sanjiRemaining
-  } = useSanjiMint(walletClient);
+export default function useSpecialCardMint({
+  provider,
+  contractAddress,
+  requiredSanji,
+  maxSupply,
+  cardType // "Whistle" or "Altman"
+}) {
+  const [status, setStatus] = useState("");
+  const [minting, setMinting] = useState(false);
+  const [cooldownActive, setCooldownActive] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [hasMinted, setHasMinted] = useState(false);
+  const [supply, setSupply] = useState(null);
 
-  const {
-    mintWithToken,
-    minting: tokenMinting,
-    status: tokenStatus,
-    cooldownActive: tokenCooldown,
-    timeLeft: tokenTimeLeft,
-    hasMinted: tokenHasMinted,
-    remaining: tokenRemaining
-  } = useStablecoinMint(walletClient);
+  const isAltman = cardType === "Altman";
+  const selectedABI = isAltman ? AltmanABI.abi : WhistleABI.abi;
 
-  const whistle = useSpecialCardMint({
-    provider: walletClient,
-    contractAddress: "0x1A7475d874E07860a5b4E4a026FFb49D0614AD87",
-    cardType: "Whistle",
-    requiredSanji: ethers.parseUnits("5000000", 18),
-    maxSupply: 200
-  });
+  useEffect(() => {
+    if (!provider) return;
 
-  const altman = useSpecialCardMint({
-    provider: walletClient,
-    contractAddress: "0xbd4087A4991278407B2275D17D94942e96D3Dac4",
-    cardType: "Altman",
-    requiredSanji: ethers.parseUnits("10000000", 18),
-    maxSupply: 100
-  });
+    (async () => {
+      try {
+        const browserProvider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await browserProvider.getSigner();
+        const wallet = await signer.getAddress();
 
-  const handleSanjiMint = async () => {
+        if (!ethers.isAddress(wallet)) throw new Error("Invalid wallet address");
+
+        const contract = new ethers.Contract(contractAddress, selectedABI, signer);
+
+        const last = await contract.lastMintTime(wallet);
+        const now = Math.floor(Date.now() / 1000);
+        const diff = now - Number(last);
+
+        const minted = await contract.hasMinted(wallet);
+        setHasMinted(minted);
+
+        if (diff < COOLDOWN) {
+          setCooldownActive(true);
+          setTimeLeft(COOLDOWN - diff);
+        } else {
+          setCooldownActive(false);
+          setTimeLeft(0);
+        }
+
+        const current = isAltman
+          ? await contract.globalTokenId()
+          : await contract.currentSupply();
+
+        setSupply(Number(current));
+      } catch (err) {
+        console.error("SpecialCard status error:", err);
+        setStatus("❌ Error fetching status.");
+      }
+    })();
+  }, [provider, contractAddress]);
+
+  const mint = async () => {
     try {
-      const result = await mintWithSanji();
-      if (!result) setShowStablecoin(true);
+      setMinting(true);
+      setStatus("Checking SANJI balance...");
+
+      const browserProvider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await browserProvider.getSigner();
+      const wallet = await signer.getAddress();
+
+      const token = new ethers.Contract(SANJI_ADDRESS, ERC20ABI.abi, signer);
+      const balance = await token.balanceOf(wallet);
+
+      if (BigInt(balance.toString()) < BigInt(requiredSanji.toString())) {
+        setStatus(`❌ You need at least ${ethers.formatUnits(requiredSanji, 18)} SANJI to mint this card.`);
+        return;
+      }
+
+      setStatus("Minting...");
+      const contract = new ethers.Contract(contractAddress, selectedABI, signer);
+
+      const tx = isAltman
+        ? await contract.mintSpecialCard()        // ✅ Altman takes no params
+        : await contract.mintSpecialCard(wallet); // ✅ Whistle needs address param
+
+      await tx.wait();
+
+      setStatus("✅ Minted!");
+      setHasMinted(true);
+      setCooldownActive(true);
+      setTimeLeft(COOLDOWN);
     } catch (err) {
-      console.error("SANJI mint error:", err);
-      setShowStablecoin(true);
+      console.error("SpecialCard mint failed:", err);
+      setStatus(`❌ Mint failed: ${err.message || "Unknown error"}`);
+    } finally {
+      setMinting(false);
     }
   };
 
-  const handleStablecoinMint = async () => {
-    try {
-      await mintWithToken(selectedToken);
-    } catch (err) {
-      console.error("Stablecoin mint error:", err);
-    }
+  return {
+    mint,
+    minting,
+    status,
+    cooldownActive,
+    timeLeft,
+    hasMinted,
+    remaining: supply !== null ? `${maxSupply - supply} / ${maxSupply}` : "Loading..."
   };
-
-  const handleWhistleMint = async () => {
-    if (whistle.hasMinted || whistle.cooldownActive) return;
-    try {
-      await whistle.mint();
-    } catch (err) {
-      console.error("Whistle mint error:", err);
-    }
-  };
-
-  const handleAltmanMint = async () => {
-    if (altman.hasMinted || altman.cooldownActive) return;
-    try {
-      await altman.mint();
-    } catch (err) {
-      console.error("Altman mint error:", err);
-    }
-  };
-
-  return (
-    <main className="relative w-screen h-screen overflow-hidden text-white">
-      <Image
-        src="/mint_background.jpg"
-        alt="Sanji Meme Matchup Background"
-        layout="fill"
-        objectFit="cover"
-        priority
-        className="pointer-events-none z-0"
-      />
-
-      <div className="absolute top-4 left-4 z-20 p-4 bg-black bg-opacity-70 rounded space-y-4">
-        <p>✅ useAccount is working: {isConnected ? "Connected" : "Not connected"}</p>
-        <p>🧪 useWalletClient result: {walletClient ? "✅ WalletClient available" : "❌ WalletClient not available"}</p>
-
-        {/* === Base Deck Mint === */}
-        <button
-          onClick={handleSanjiMint}
-          disabled={sanjiMinting || sanjiCooldown || sanjiHasMinted}
-          className="bg-green-600 px-4 py-2 rounded disabled:opacity-50"
-        >
-          {sanjiMinting ? "Minting..." : "Mint Sanji 'n Frens Base Deck"}
-        </button>
-        <p>{sanjiStatus}</p>
-        <p>Remaining Base Decks: {sanjiRemaining}</p>
-        {sanjiCooldown && sanjiTimeLeft && (
-          <p>Cooldown: {Math.ceil(sanjiTimeLeft / 86400)} days left</p>
-        )}
-
-        {/* === Stablecoin Option === */}
-        {showStablecoin && (
-          <div className="space-y-2">
-            <select
-              value={selectedToken}
-              onChange={(e) => setSelectedToken(e.target.value)}
-              className="text-black p-1 rounded"
-            >
-              <option value="USDT">Pay with USDT ($25)</option>
-              <option value="USDC">Pay with USDC ($25)</option>
-            </select>
-            <button
-              onClick={handleStablecoinMint}
-              disabled={tokenMinting || tokenCooldown || tokenHasMinted}
-              className="bg-blue-600 px-4 py-2 rounded disabled:opacity-50"
-            >
-              {tokenMinting ? "Minting..." : `Mint with ${selectedToken}`}
-            </button>
-            <p>{tokenStatus}</p>
-            <p>Remaining Base Decks: {tokenRemaining}</p>
-            {tokenCooldown && tokenTimeLeft && (
-              <p>Cooldown: {Math.ceil(tokenTimeLeft / 86400)} days left</p>
-            )}
-          </div>
-        )}
-
-        <hr className="my-4" />
-
-        {/* === Whistle Card === */}
-        <button
-          onClick={handleWhistleMint}
-          disabled={whistle.minting || whistle.cooldownActive || whistle.hasMinted}
-          className="bg-purple-600 px-4 py-2 rounded disabled:opacity-50"
-        >
-          {whistle.minting
-            ? "Minting..."
-            : whistle.hasMinted
-            ? "✅ Already Minted"
-            : whistle.cooldownActive
-            ? "⏳ Cooldown Active"
-            : "Mint Sanji’s Tactical Whistle (5M SANJI)"}
-        </button>
-        <p>{whistle.status}</p>
-        <p>Remaining Whistle Cards: {whistle.remaining}</p>
-        {whistle.cooldownActive && whistle.timeLeft && (
-          <p>Cooldown: {Math.ceil(whistle.timeLeft / 86400)} days left</p>
-        )}
-
-        {/* === Altman Card === */}
-        <button
-          onClick={handleAltmanMint}
-          disabled={altman.minting || altman.cooldownActive || altman.hasMinted}
-          className="bg-yellow-500 px-4 py-2 rounded disabled:opacity-50"
-        >
-          {altman.minting
-            ? "Minting..."
-            : altman.hasMinted
-            ? "✅ Already Minted"
-            : altman.cooldownActive
-            ? "⏳ Cooldown Active"
-            : "Mint Sam Altman's First Code (10M SANJI)"}
-        </button>
-        <p>{altman.status}</p>
-        <p>Remaining Altman Cards: {altman.remaining}</p>
-        {altman.cooldownActive && altman.timeLeft && (
-          <p>Cooldown: {Math.ceil(altman.timeLeft / 86400)} days left</p>
-        )}
-      </div>
-    </main>
-  );
 }
