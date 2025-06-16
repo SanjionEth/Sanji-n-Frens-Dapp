@@ -86,5 +86,7 @@ export default function useSpecialCardMint({
     } catch (err) {
       console.error("SpecialCard mint failed:", err);
       setStatus(`❌ Mint failed: ${err.message || "Unknown error"}`);
-    } finally {
-      setMinting(fa
+   } finally {
+  setMinting(false);
+}
+
