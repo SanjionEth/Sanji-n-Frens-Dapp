@@ -75,7 +75,7 @@ export default function useSpecialCardMint({
 
       setStatus("Minting...");
       const contract = new ethers.Contract(contractAddress, SpecialCardABI.abi, signer);
-      const tx = await contract.mintSpecialCard(wallet);
+      const tx = await contract.mintSpecialCard(); // ✅ FIX: no parameters
       await tx.wait();
 
       setStatus("✅ Minted!");
