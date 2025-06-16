@@ -133,16 +133,35 @@ export default function MainPage() {
 
         <hr className="my-4" />
 
-        <button
-          onClick={handleWhistleMint}
-          disabled={whistle.minting || whistle.cooldownActive || whistle.hasMinted}
-          className="bg-purple-600 px-4 py-2 rounded disabled:opacity-50"
-        >
-          {whistle.minting ? "Minting..." : "Mint Sanji’s Tactical Whistle (5M SANJI)"}
-        </button>
-        <p>{whistle.status}</p>
-        <p>Remaining: {whistle.remaining}</p>
-        {whistle.cooldownActive && <p>Cooldown: {Math.ceil(whistle.timeLeft / 86400)} days left</p>}
+        <div
+  className={`p-4 rounded transition-all ${
+    whistle.hasMinted || whistle.cooldownActive
+      ? "bg-gray-700 opacity-50 cursor-not-allowed"
+      : "bg-purple-600"
+  }`}
+>
+  <button
+    onClick={handleWhistleMint}
+    disabled={whistle.minting || whistle.cooldownActive || whistle.hasMinted}
+    className="w-full px-4 py-2 rounded text-white disabled:opacity-50"
+  >
+    {whistle.hasMinted
+      ? "✅ Already Minted"
+      : whistle.cooldownActive
+      ? "⏳ Cooldown Active"
+      : whistle.minting
+      ? "Minting..."
+      : "Mint Sanji’s Tactical Whistle (5M SANJI)"}
+  </button>
+
+  <div className="text-sm mt-2">
+    <p>Remaining: {whistle.remaining}</p>
+    {whistle.cooldownActive && whistle.timeLeft && (
+      <p>Cooldown: {Math.ceil(whistle.timeLeft / 86400)} days left</p>
+    )}
+    {whistle.status && <p className="mt-1 text-yellow-300">{whistle.status}</p>}
+  </div>
+</div>
 
         <button
           onClick={handleAltmanMint}
